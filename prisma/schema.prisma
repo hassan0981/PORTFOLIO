@@ -1,0 +1,64 @@
+datasource db {
+  provider  = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Project {
+  id          String   @id @default(uuid())
+  title       String
+  slug        String   @unique
+  description String
+  content     String   @db.Text
+  imageUrl    String
+  tags        String[]
+  features    String[]
+  githubUrl   String?
+  liveUrl     String?
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model BlogPost {
+  id          String   @id @default(uuid())
+  title       String
+  slug        String   @unique
+  description String
+  content     String   @db.Text
+  imageUrl    String?
+  category    String
+  readingTime String
+  published   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Message {
+  id        String   @id @default(uuid())
+  name      String
+  email     String
+  subject   String
+  message   String
+  createdAt DateTime @default(now())
+}
+
+model Certificate {
+  id            String   @id @default(uuid())
+  title         String
+  issuer        String
+  issueDate     String
+  credentialUrl String?
+  imageUrl      String?
+  order         Int      @default(0)
+  createdAt     DateTime @default(now())
+}
+
+model Resume {
+  id        String   @id @default(uuid())
+  url       String
+  isActive  Boolean  @default(true)
+  updatedAt DateTime @updatedAt
+}
