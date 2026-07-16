@@ -70,34 +70,29 @@ export default function ContactForm() {
   };
 
   return (
-    <div className="w-full glass-card glass-card-hover p-6 sm:p-8 rounded-2xl relative overflow-hidden">
+    <div className="w-full surface p-5 sm:p-6 md:p-8 relative overflow-hidden rounded-2xl">
       <AnimatePresence mode="wait">
         {submitStatus === "success" ? (
           <motion.div
             key="success"
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
             className="flex flex-col items-center justify-center text-center py-12"
           >
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ type: "spring", stiffness: 200, damping: 15 }}
-            >
-              <CheckCircle2 className="h-16 w-16 text-emerald-500 mb-6" />
-            </motion.div>
-            <h3 className="text-xl font-bold text-foreground mb-2">Message Sent!</h3>
-            <p className="text-sm text-muted-foreground max-w-md mb-8">
-              Thank you for reaching out. I have received your message and will get back to you as
-              soon as possible.
+            <CheckCircle2 className="h-12 w-12 text-primary mb-5" />
+            <h3 className="text-xl font-display font-medium text-foreground mb-2">
+              Message sent
+            </h3>
+            <p className="text-sm text-muted-foreground max-w-md mb-8 leading-relaxed">
+              Thank you for reaching out. I have received your message and will get back to you soon.
             </p>
             <Button
               onClick={() => setSubmitStatus("idle")}
               variant="outline"
-              className="text-xs font-semibold cursor-pointer"
+              className="text-xs font-medium cursor-pointer"
             >
-              Send Another Message
+              Send another message
             </Button>
           </motion.div>
         ) : (
@@ -110,7 +105,7 @@ export default function ContactForm() {
             exit={{ opacity: 0 }}
           >
             {submitStatus === "error" && (
-              <div className="p-3 bg-destructive/10 border border-destructive/20 text-destructive text-sm rounded-lg flex items-start space-x-2.5">
+              <div className="p-3 bg-destructive/10 border border-destructive/20 text-destructive text-sm rounded-md flex items-start gap-2.5">
                 <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
                 <span>{errorMessage}</span>
               </div>
@@ -118,14 +113,17 @@ export default function ContactForm() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <label htmlFor="name" className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                <label
+                  htmlFor="name"
+                  className="font-mono text-[10px] tracking-[0.18em] uppercase text-muted-foreground"
+                >
                   Full Name
                 </label>
                 <Input
                   id="name"
                   type="text"
                   placeholder="John Doe"
-                  className={`bg-background border-border ${errors.name ? "border-destructive focus-visible:ring-destructive" : ""}`}
+                  className={`bg-background/50 border-border rounded-md ${errors.name ? "border-destructive focus-visible:ring-destructive" : ""}`}
                   {...register("name")}
                   disabled={isSubmitting}
                 />
@@ -135,14 +133,17 @@ export default function ContactForm() {
               </div>
 
               <div className="space-y-1.5">
-                <label htmlFor="email" className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                <label
+                  htmlFor="email"
+                  className="font-mono text-[10px] tracking-[0.18em] uppercase text-muted-foreground"
+                >
                   Email Address
                 </label>
                 <Input
                   id="email"
                   type="email"
                   placeholder="john@example.com"
-                  className={`bg-background border-border ${errors.email ? "border-destructive focus-visible:ring-destructive" : ""}`}
+                  className={`bg-background/50 border-border rounded-md ${errors.email ? "border-destructive focus-visible:ring-destructive" : ""}`}
                   {...register("email")}
                   disabled={isSubmitting}
                 />
@@ -153,14 +154,17 @@ export default function ContactForm() {
             </div>
 
             <div className="space-y-1.5">
-              <label htmlFor="subject" className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              <label
+                htmlFor="subject"
+                className="font-mono text-[10px] tracking-[0.18em] uppercase text-muted-foreground"
+              >
                 Subject
               </label>
               <Input
                 id="subject"
                 type="text"
-                placeholder="Project Inquiry / Collaboration"
-                className={`bg-background border-border ${errors.subject ? "border-destructive focus-visible:ring-destructive" : ""}`}
+                placeholder="Project inquiry / collaboration"
+                className={`bg-background/50 border-border rounded-md ${errors.subject ? "border-destructive focus-visible:ring-destructive" : ""}`}
                 {...register("subject")}
                 disabled={isSubmitting}
               />
@@ -170,14 +174,17 @@ export default function ContactForm() {
             </div>
 
             <div className="space-y-1.5">
-              <label htmlFor="message" className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              <label
+                htmlFor="message"
+                className="font-mono text-[10px] tracking-[0.18em] uppercase text-muted-foreground"
+              >
                 Your Message
               </label>
               <Textarea
                 id="message"
-                placeholder="Tell me about your project, goals, or schedule..."
+                placeholder="Tell me about your project, goals, or timeline..."
                 rows={5}
-                className={`bg-background border-border resize-none ${errors.message ? "border-destructive focus-visible:ring-destructive" : ""}`}
+                className={`bg-background/50 border-border rounded-md resize-none ${errors.message ? "border-destructive focus-visible:ring-destructive" : ""}`}
                 {...register("message")}
                 disabled={isSubmitting}
               />
@@ -189,12 +196,12 @@ export default function ContactForm() {
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="w-full flex items-center justify-center space-x-2 py-6 text-sm font-semibold cursor-pointer"
+              className="w-full flex items-center justify-center gap-2 h-11 text-sm font-medium cursor-pointer"
             >
               {isSubmitting ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  <span>Sending Message...</span>
+                  <span>Sending...</span>
                 </>
               ) : (
                 <>

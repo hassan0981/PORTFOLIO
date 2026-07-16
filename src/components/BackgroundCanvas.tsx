@@ -46,15 +46,13 @@ export default function BackgroundCanvas() {
 
     // Particles array
     const particles: Particle[] = [];
-    const particleCount = 40;
+    const particleCount = 28;
 
     // Rings array
     const rings: Ring[] = [
-      { x: 0, y: 0, progress: 0, delay: 0.0, speed: 0.003 },
-      { x: 0, y: 0, progress: 0, delay: 0.2, speed: 0.003 },
-      { x: 0, y: 0, progress: 0, delay: 0.4, speed: 0.003 },
-      { x: 0, y: 0, progress: 0, delay: 0.6, speed: 0.003 },
-      { x: 0, y: 0, progress: 0, delay: 0.8, speed: 0.003 },
+      { x: 0, y: 0, progress: 0, delay: 0.0, speed: 0.0018 },
+      { x: 0, y: 0, progress: 0, delay: 0.33, speed: 0.0018 },
+      { x: 0, y: 0, progress: 0, delay: 0.66, speed: 0.0018 },
     ];
 
     let targetX = width / 2;
@@ -94,10 +92,10 @@ export default function BackgroundCanvas() {
         particles.push({
           x: Math.random() * width,
           y: Math.random() * height,
-          vx: (Math.random() - 0.5) * 0.35,
-          vy: (Math.random() - 0.5) * 0.35,
-          size: 1.5 + Math.random() * 2,
-          alpha: 0.15 + Math.random() * 0.3,
+          vx: (Math.random() - 0.5) * 0.18,
+          vy: (Math.random() - 0.5) * 0.18,
+          size: 1 + Math.random() * 1.5,
+          alpha: 0.08 + Math.random() * 0.16,
           pulseSpeed: 0.02 + Math.random() * 0.03,
           pulsePhase: Math.random() * Math.PI * 2,
         });
@@ -149,39 +147,37 @@ export default function BackgroundCanvas() {
         // Draw particle node
         ctx.beginPath();
         ctx.arc(p.x, p.y, currentSize, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(97, 218, 251, ${currentAlpha})`; // Cyan
+        ctx.fillStyle = `rgba(94, 234, 212, ${currentAlpha})`;
         ctx.fill();
 
-        // Connect to other particles
         for (let j = i + 1; j < particles.length; j++) {
           const p2 = particles[j];
           const dx = p.x - p2.x;
           const dy = p.y - p2.y;
           const dist = Math.sqrt(dx * dx + dy * dy);
 
-          if (dist < 110) {
-            const lineAlpha = (1 - dist / 110) * 0.08;
+          if (dist < 100) {
+            const lineAlpha = (1 - dist / 100) * 0.045;
             ctx.beginPath();
             ctx.moveTo(p.x, p.y);
             ctx.lineTo(p2.x, p2.y);
-            ctx.strokeStyle = `rgba(124, 110, 246, ${lineAlpha})`; // Purple line connections
-            ctx.lineWidth = 0.85;
+            ctx.strokeStyle = `rgba(94, 234, 212, ${lineAlpha})`;
+            ctx.lineWidth = 0.7;
             ctx.stroke();
           }
         }
 
-        // Connect to mouse if active
         if (mouseRef.current.active) {
           const mdx = p.x - mouseRef.current.x;
           const mdy = p.y - mouseRef.current.y;
           const mdist = Math.sqrt(mdx * mdx + mdy * mdy);
-          if (mdist < 150) {
-            const mouseLineAlpha = (1 - mdist / 150) * 0.12;
+          if (mdist < 140) {
+            const mouseLineAlpha = (1 - mdist / 140) * 0.07;
             ctx.beginPath();
             ctx.moveTo(p.x, p.y);
             ctx.lineTo(mouseRef.current.x, mouseRef.current.y);
-            ctx.strokeStyle = `rgba(97, 218, 251, ${mouseLineAlpha})`;
-            ctx.lineWidth = 1;
+            ctx.strokeStyle = `rgba(94, 234, 212, ${mouseLineAlpha})`;
+            ctx.lineWidth = 0.8;
             ctx.stroke();
           }
         }
@@ -210,17 +206,16 @@ export default function BackgroundCanvas() {
         // Smooth opacity envelope to prevent popping/flickering:
         let opacity = 0;
         if (activeProgress < 0.15) {
-          opacity = (activeProgress / 0.15) * 0.28;
+          opacity = (activeProgress / 0.15) * 0.12;
         } else {
-          opacity = ((1.0 - activeProgress) / 0.85) * 0.28;
+          opacity = ((1.0 - activeProgress) / 0.85) * 0.12;
         }
 
-        // Only render if it's within viewport heights
         if (ringCenterY > -400 && ringCenterY < height + 400) {
           ctx.beginPath();
           ctx.arc(ringCenterX, ringCenterY, currentScale, 0, Math.PI * 2);
-          ctx.strokeStyle = `rgba(34, 211, 238, ${opacity})`; // Cyan-blue ring
-          ctx.lineWidth = 1.25;
+          ctx.strokeStyle = `rgba(94, 234, 212, ${opacity})`;
+          ctx.lineWidth = 1;
           ctx.stroke();
         }
       });
@@ -242,7 +237,7 @@ export default function BackgroundCanvas() {
   return (
     <canvas
       ref={canvasRef}
-      className="pointer-events-none fixed inset-0 z-0 select-none opacity-85"
+      className="pointer-events-none fixed inset-0 z-0 select-none opacity-45 dark:opacity-55"
     />
   );
 }

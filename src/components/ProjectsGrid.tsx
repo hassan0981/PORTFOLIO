@@ -5,7 +5,7 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { Github, ExternalLink, ArrowRight } from "lucide-react";
 import { ProjectData } from "@/lib/dbService";
-import { TiltCard } from "@/components/Animated";
+import { HoverLift } from "@/components/Animated";
 
 interface ProjectsGridProps {
   projects: ProjectData[];
@@ -14,7 +14,6 @@ interface ProjectsGridProps {
 export default function ProjectsGrid({ projects }: ProjectsGridProps) {
   const [selectedTag, setSelectedTag] = React.useState<string | null>(null);
 
-  // Extract unique tags across all projects
   const allTags = React.useMemo(() => {
     const tags = new Set<string>();
     projects.forEach((proj) => {
@@ -23,7 +22,6 @@ export default function ProjectsGrid({ projects }: ProjectsGridProps) {
     return Array.from(tags);
   }, [projects]);
 
-  // Filter projects by selected tag
   const filteredProjects = React.useMemo(() => {
     if (!selectedTag) return projects;
     return projects.filter((p) => p.tags.includes(selectedTag));
@@ -31,26 +29,25 @@ export default function ProjectsGrid({ projects }: ProjectsGridProps) {
 
   return (
     <div>
-      {/* Filters */}
-      <div className="flex flex-wrap items-center gap-2 mb-10">
+      <div className="flex flex-wrap items-center gap-2 mb-12">
         <button
           onClick={() => setSelectedTag(null)}
-          className={`text-xs px-3.5 py-1.5 rounded-lg border font-medium transition-all cursor-pointer ${
+          className={`text-xs px-3 py-1.5 border font-medium transition-colors cursor-pointer ${
             selectedTag === null
-              ? "bg-primary border-primary text-primary-foreground shadow-sm shadow-primary/10"
-              : "border-border hover:border-muted-foreground/35 bg-card text-muted-foreground hover:text-foreground"
+              ? "border-primary bg-primary/10 text-primary"
+              : "border-border text-muted-foreground hover:text-foreground hover:border-primary/35"
           }`}
         >
-          All Projects
+          All
         </button>
         {allTags.map((tag) => (
           <button
             key={tag}
             onClick={() => setSelectedTag(tag)}
-            className={`text-xs px-3.5 py-1.5 rounded-lg border font-medium transition-all cursor-pointer ${
+            className={`text-xs px-3 py-1.5 border font-medium transition-colors cursor-pointer ${
               selectedTag === tag
-                ? "bg-primary border-primary text-primary-foreground shadow-sm shadow-primary/10"
-                : "border-border hover:border-muted-foreground/35 bg-card text-muted-foreground hover:text-foreground"
+                ? "border-primary bg-primary/10 text-primary"
+                : "border-border text-muted-foreground hover:text-foreground hover:border-primary/35"
             }`}
           >
             {tag}
@@ -58,35 +55,32 @@ export default function ProjectsGrid({ projects }: ProjectsGridProps) {
         ))}
       </div>
 
-      {/* Projects Grid Layout */}
-      <motion.div layout className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <motion.div layout className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <AnimatePresence mode="popLayout">
           {filteredProjects.map((project) => (
             <motion.div
               layout
-              initial={{ opacity: 0, scale: 0.98 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.98 }}
-              transition={{ duration: 0.25 }}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 8 }}
+              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
               key={project.id}
               className="h-full"
             >
-              <TiltCard className="h-full">
-                <div className="glass-card glass-card-hover rounded-2xl overflow-hidden flex flex-col justify-between group h-full">
-                  {/* Graphic/Image cover representation */}
-                  <div className="aspect-video relative overflow-hidden bg-slate-950 flex flex-col justify-center items-center p-6 text-center border-b border-border">
-                    <div className="absolute inset-0 bg-gradient-to-t from-background/30 to-transparent" />
-                    <span className="text-[10px] font-mono tracking-widest text-indigo-400/80 uppercase mb-1">
-                      Engineered Solution
+              <HoverLift className="h-full">
+                <article className="surface surface-hover flex flex-col justify-between group h-full">
+                  <div className="aspect-[16/10] relative overflow-hidden bg-muted/80 dark:bg-[#0a0b0f] flex flex-col justify-center items-center p-6 text-center border-b border-border/70">
+                    <span className="font-mono text-[10px] tracking-[0.2em] uppercase text-primary/70 mb-2">
+                      Project
                     </span>
-                    <h3 className="text-white text-xl font-bold tracking-tight mb-2">
+                    <h3 className="text-foreground text-xl font-display font-medium tracking-tight mb-3">
                       {project.title}
                     </h3>
-                    <div className="flex flex-wrap justify-center gap-1.5 mt-2 max-w-xs">
-                      {project.tags.map((t) => (
+                    <div className="flex flex-wrap justify-center gap-1.5 max-w-xs">
+                      {project.tags.slice(0, 4).map((t) => (
                         <span
                           key={t}
-                          className="text-[9px] px-2 py-0.5 rounded-full bg-white/10 text-white/90 font-semibold"
+                          className="text-[10px] px-2 py-0.5 border border-border text-muted-foreground font-mono dark:border-white/15 dark:text-white/70"
                         >
                           {t}
                         </span>
@@ -94,45 +88,43 @@ export default function ProjectsGrid({ projects }: ProjectsGridProps) {
                     </div>
                   </div>
 
-                  {/* Card Body */}
-                  <div className="p-6 flex-grow flex flex-col justify-between">
+                  <div className="p-5 flex-grow flex flex-col justify-between">
                     <div>
-                      <h4 className="text-lg font-bold text-foreground group-hover:text-primary transition-colors">
+                      <h4 className="text-base font-medium text-foreground group-hover:text-primary transition-colors">
                         {project.title}
                       </h4>
-                      <p className="text-xs md:text-sm text-muted-foreground mt-2 leading-relaxed line-clamp-3">
+                      <p className="text-sm text-muted-foreground mt-2 leading-relaxed line-clamp-3">
                         {project.description}
                       </p>
 
-                      {/* Highlights list */}
-                      <div className="mt-4 space-y-1">
+                      <div className="mt-4 space-y-1.5">
                         {project.features.slice(0, 2).map((feat, idx) => (
-                          <div key={idx} className="flex items-center space-x-2 text-xs text-muted-foreground">
-                            <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-                            <span>{feat}</span>
+                          <div
+                            key={idx}
+                            className="text-xs text-muted-foreground pl-3 relative before:absolute before:left-0 before:top-[0.5em] before:w-1.5 before:h-px before:bg-primary/50"
+                          >
+                            {feat}
                           </div>
                         ))}
                       </div>
                     </div>
 
-                    {/* Footer links */}
-                    <div className="mt-6 pt-4 border-t border-border/50 flex items-center justify-between">
+                    <div className="mt-6 pt-4 border-t border-border/60 flex items-center justify-between">
                       <Link
                         href={`/projects/${project.slug}`}
-                        className="text-xs font-semibold text-primary hover:underline flex items-center space-x-1"
+                        className="text-xs font-medium text-primary inline-flex items-center gap-1 hover:underline"
                       >
-                        <span>Read Study Case</span>
-                        <ArrowRight className="h-3 w-3" />
+                        Case study <ArrowRight className="h-3 w-3" />
                       </Link>
 
-                      <div className="flex space-x-2">
+                      <div className="flex gap-3">
                         {project.githubUrl && (
                           <a
                             href={project.githubUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="p-1.5 rounded-lg border border-border text-muted-foreground hover:text-foreground transition-colors"
-                            aria-label="GitHub Repository"
+                            className="text-muted-foreground hover:text-foreground transition-colors"
+                            aria-label="GitHub"
                           >
                             <Github className="h-4 w-4" />
                           </a>
@@ -142,8 +134,8 @@ export default function ProjectsGrid({ projects }: ProjectsGridProps) {
                             href={project.liveUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="p-1.5 rounded-lg border border-border text-muted-foreground hover:text-foreground transition-colors"
-                            aria-label="Live Website"
+                            className="text-muted-foreground hover:text-foreground transition-colors"
+                            aria-label="Live demo"
                           >
                             <ExternalLink className="h-4 w-4" />
                           </a>
@@ -151,8 +143,8 @@ export default function ProjectsGrid({ projects }: ProjectsGridProps) {
                       </div>
                     </div>
                   </div>
-                </div>
-              </TiltCard>
+                </article>
+              </HoverLift>
             </motion.div>
           ))}
         </AnimatePresence>

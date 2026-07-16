@@ -16,20 +16,20 @@ export default function SubtitleCycles() {
   React.useEffect(() => {
     const timer = setInterval(() => {
       setIndex((prevIndex) => (prevIndex + 1) % roles.length);
-    }, 3000);
+    }, 3200);
     return () => clearInterval(timer);
   }, []);
 
   return (
-    <div className="h-8 md:h-10 overflow-hidden relative flex items-center">
+    <div className="h-7 md:h-8 overflow-hidden relative flex items-center">
       <AnimatePresence mode="wait">
         <motion.span
           key={index}
-          initial={{ y: 15, opacity: 0 }}
+          initial={{ y: 12, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          exit={{ y: -15, opacity: 0 }}
-          transition={{ duration: 0.35, ease: "easeInOut" }}
-          className="text-lg md:text-xl font-mono font-semibold gradient-text block"
+          exit={{ y: -12, opacity: 0 }}
+          transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+          className="text-base md:text-lg font-mono tracking-wide text-primary block"
         >
           {roles[index]}
         </motion.span>

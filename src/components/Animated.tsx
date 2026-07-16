@@ -23,12 +23,12 @@ export function FadeIn({ children, delay = 0, duration = 0.5, className = "" }: 
   );
 }
 
-export function SlideUp({ children, delay = 0, duration = 0.5, className = "" }: AnimationProps) {
+export function SlideUp({ children, delay = 0, duration = 0.7, className = "" }: AnimationProps) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 24 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration, delay, ease: [0.16, 1, 0.3, 1] }} // smooth easeOutExpo
+      transition={{ duration, delay, ease: [0.16, 1, 0.3, 1] }}
       className={className}
     >
       {children}
@@ -49,12 +49,12 @@ export function ScaleIn({ children, delay = 0, duration = 0.5, className = "" }:
   );
 }
 
-export function ScrollReveal({ children, delay = 0, duration = 0.6, className = "" }: AnimationProps) {
+export function ScrollReveal({ children, delay = 0, duration = 0.75, className = "" }: AnimationProps) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 30 }}
+      initial={{ opacity: 0, y: 36 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-100px" }}
+      viewport={{ once: true, margin: "-80px" }}
       transition={{ duration, delay, ease: [0.16, 1, 0.3, 1] }}
       className={className}
     >
@@ -66,7 +66,13 @@ export function ScrollReveal({ children, delay = 0, duration = 0.6, className = 
 export function HoverLift({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
     <motion.div
-      whileHover={{ y: -6, transition: { duration: 0.2, ease: "easeInOut" } }}
+      whileHover={{
+        y: -8,
+        rotateX: 4,
+        rotateY: -3,
+        transition: { duration: 0.35, ease: [0.16, 1, 0.3, 1] },
+      }}
+      style={{ transformStyle: "preserve-3d", perspective: 900 }}
       className={className}
     >
       {children}
@@ -132,6 +138,7 @@ export function TextReveal({ text, delay = 0, className = "", tagName = "h1" }: 
 }
 
 export function TiltCard({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  const [enabled, setEnabled] = React.useState(false);
   const x = useMotionValue(0.5);
   const y = useMotionValue(0.5);
 
@@ -141,7 +148,16 @@ export function TiltCard({ children, className = "" }: { children: React.ReactNo
   const rotateX = useTransform(mouseYSpring, [0, 1], [10, -10]);
   const rotateY = useTransform(mouseXSpring, [0, 1], [-10, 10]);
 
+  React.useEffect(() => {
+    const mq = window.matchMedia("(pointer: fine) and (min-width: 1024px)");
+    const update = () => setEnabled(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+
   function handleMouseMove(e: React.MouseEvent<HTMLDivElement>) {
+    if (!enabled) return;
     const rect = e.currentTarget.getBoundingClientRect();
     const width = rect.width;
     const height = rect.height;
@@ -156,6 +172,10 @@ export function TiltCard({ children, className = "" }: { children: React.ReactNo
   function handleMouseLeave() {
     x.set(0.5);
     y.set(0.5);
+  }
+
+  if (!enabled) {
+    return <div className={className}>{children}</div>;
   }
 
   return (

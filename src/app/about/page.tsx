@@ -1,6 +1,6 @@
 import React from "react";
 import Link from "next/link";
-import { GraduationCap, Award, ExternalLink, ArrowLeft, Heart, Shield, Code, Lightbulb } from "lucide-react";
+import { ExternalLink, ArrowLeft } from "lucide-react";
 import { dbService } from "@/lib/dbService";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -15,171 +15,161 @@ export default async function AboutPage() {
   const values = [
     {
       title: "Clean & Type-safe Code",
-      description: "Writing code that is easily readable, testable, and robust using modern TypeScript and best practices.",
-      icon: <Code className="h-5 w-5 text-primary" />,
+      description:
+        "Writing code that is easily readable, testable, and robust using modern TypeScript and best practices.",
     },
     {
       title: "User-Centric Design",
-      description: "Ensuring applications have excellent UX, smooth transitions, and accessibility compliance.",
-      icon: <Heart className="h-5 w-5 text-indigo-500" />,
+      description:
+        "Ensuring applications have excellent UX, smooth transitions, and accessibility compliance.",
     },
     {
       title: "Security & Scale",
-      description: "Adhering to secure authentication, optimized database queries, and clean architecture.",
-      icon: <Shield className="h-5 w-5 text-purple-500" />,
+      description:
+        "Adhering to secure authentication, optimized database queries, and clean architecture.",
     },
     {
       title: "Continuous Learning",
-      description: "Always learning new frameworks, exploring AI automations, and refining existing capabilities.",
-      icon: <Lightbulb className="h-5 w-5 text-rose-500" />,
+      description:
+        "Always learning new frameworks, exploring AI automations, and refining existing capabilities.",
     },
   ];
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
-      {/* Back button */}
-      <SlideUp delay={0.05}>
-        <Link
-          href="/"
-          className={cn(
-            buttonVariants({ variant: "ghost", size: "sm" }),
-            "mb-8 cursor-pointer inline-flex items-center space-x-1"
-          )}
-        >
-          <ArrowLeft className="h-4 w-4" />
-          <span>Back to Home</span>
-        </Link>
-      </SlideUp>
+    <div className="section-shell">
+      <div className="section-inner max-w-4xl">
+        <SlideUp delay={0.05}>
+          <Link
+            href="/"
+            className={cn(
+              buttonVariants({ variant: "ghost", size: "sm" }),
+              "mb-10 cursor-pointer inline-flex items-center gap-1.5 -ml-2"
+            )}
+          >
+            <ArrowLeft className="h-4 w-4" />
+            <span>Back</span>
+          </Link>
+        </SlideUp>
 
-      {/* Header */}
-      <SlideUp delay={0.1}>
-        <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-foreground">
-          My Professional Story
-        </h1>
-        <p className="text-muted-foreground mt-3 text-base sm:text-lg max-w-2xl leading-relaxed">
-          I am a Computer Science graduate passionate about building modern web applications,
-          mobile applications, AI-powered systems, and scalable software solutions.
-        </p>
-      </SlideUp>
-
-      {/* Story Narrative */}
-      <div className="mt-12 space-y-6 text-sm md:text-base text-muted-foreground leading-relaxed">
-        <ScrollReveal delay={0.1}>
-          <p>
-            My journey into computer science began with a deep curiosity about how software shapes our daily interactions. 
-            Throughout my academic career at the{" "}
-            <strong className="text-foreground">University of Central Punjab</strong>, I developed a strong foundation in 
-            algorithmic thinking, software architecture, and computer vision. I translated this theory into practice 
-            by building products for various domains—ranging from influencer marketing trackers to ISO lead management CMS systems.
+        <SlideUp delay={0.1}>
+          <p className="section-index">About</p>
+          <h1 className="section-title">My professional story</h1>
+          <p className="section-lede">
+            I am a Computer Science graduate passionate about building modern web applications,
+            mobile applications, AI-powered systems, and scalable software solutions.
           </p>
-        </ScrollReveal>
+        </SlideUp>
 
-        <ScrollReveal delay={0.2}>
-          <p>
-            As a developer, I specialize in the <strong className="text-foreground">MERN Stack</strong>, 
-            <strong className="text-foreground">Next.js</strong>, and <strong className="text-foreground">React Native</strong>. 
-            I enjoy bridging the gap between web backend routing and highly responsive client layouts. My recent research and projects 
-            delve into <strong className="text-foreground">AI Automations</strong> using OpenCV and MediaPipe, creating low-latency computer 
-            vision tools that provide intelligent solutions in real time.
-          </p>
-        </ScrollReveal>
-      </div>
-
-      {/* Strengths & Core Values */}
-      <section className="mt-20">
-        <ScrollReveal>
-          <h2 className="text-2xl font-bold tracking-tight text-foreground mb-8">
-            What I Value
-          </h2>
-        </ScrollReveal>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          {values.map((v, idx) => (
-            <ScrollReveal key={v.title} delay={idx * 0.08}>
-              <div className="p-5 rounded-2xl glass-card glass-card-hover flex flex-col justify-start">
-                <div className="p-2 bg-secondary rounded-xl w-fit mb-4">
-                  {v.icon}
-                </div>
-                <h3 className="font-bold text-foreground mb-2">{v.title}</h3>
-                <p className="text-xs text-muted-foreground leading-relaxed">{v.description}</p>
-              </div>
-            </ScrollReveal>
-          ))}
-        </div>
-      </section>
-
-      {/* Education Timeline */}
-      <section className="mt-20">
-        <ScrollReveal>
-          <div className="flex items-center space-x-2.5 mb-8">
-            <GraduationCap className="h-5 w-5 text-indigo-500" />
-            <h2 className="text-2xl font-bold tracking-tight text-foreground">
-              Education
-            </h2>
-          </div>
-        </ScrollReveal>
-
-        <div className="pl-4 border-l border-border space-y-6">
-          {education.map((edu, idx) => (
-            <ScrollReveal key={edu.id} delay={idx * 0.1}>
-              <div className="relative">
-                <span className="absolute -left-[21px] top-1.5 w-3 h-3 rounded-full bg-[#7c6ef6] border-4 border-background" />
-                <div className="p-5 glass-card glass-card-hover rounded-xl">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-2">
-                    <h3 className="font-bold text-foreground text-sm">{edu.degree}</h3>
-                    <span className="text-xs font-mono font-medium px-2 py-0.5 rounded-md bg-secondary text-muted-foreground w-fit">
-                      {edu.duration}
-                    </span>
-                  </div>
-                  <h4 className="text-xs font-mono font-bold text-[#7c6ef6] mb-3">
-                    {edu.school}
-                  </h4>
-                  <p className="text-xs text-muted-foreground leading-relaxed">{edu.details}</p>
-                </div>
-              </div>
-            </ScrollReveal>
-          ))}
-        </div>
-      </section>
-
-      {/* Certifications */}
-      {certificates.length > 0 && (
-        <section className="mt-20">
-          <ScrollReveal>
-            <div className="flex items-center space-x-2.5 mb-8">
-              <Award className="h-5 w-5 text-primary" />
-              <h2 className="text-2xl font-bold tracking-tight text-foreground">
-                Certifications & Badges
-              </h2>
-            </div>
+        <div className="mt-12 space-y-6 text-sm md:text-base text-muted-foreground leading-relaxed">
+          <ScrollReveal delay={0.1}>
+            <p>
+              My journey into computer science began with a deep curiosity about how software shapes
+              our daily interactions. Throughout my academic career at the{" "}
+              <strong className="text-foreground font-medium">University of Central Punjab</strong>, I
+              developed a strong foundation in algorithmic thinking, software architecture, and
+              computer vision — then translated that theory into products across influencer marketing,
+              CMS systems, and more.
+            </p>
           </ScrollReveal>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {certificates.map((cert, idx) => (
-              <ScrollReveal key={cert.id} delay={idx * 0.08}>
-                <div className="p-4 glass-card glass-card-hover rounded-xl flex items-center justify-between">
-                  <div>
-                    <h3 className="font-bold text-foreground text-xs">{cert.title}</h3>
-                    <p className="text-[10px] font-mono text-muted-foreground mt-1">
-                      Issued by {cert.issuer} &bull; {cert.issueDate}
-                    </p>
-                  </div>
-                  {cert.credentialUrl && (
-                    <a
-                      href={cert.credentialUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="p-1.5 rounded-lg border border-border text-muted-foreground hover:text-foreground transition-colors"
-                      aria-label="View Credential"
-                    >
-                      <ExternalLink className="h-3.5 w-3.5" />
-                    </a>
-                  )}
+          <ScrollReveal delay={0.15}>
+            <p>
+              I specialize in the <strong className="text-foreground font-medium">MERN Stack</strong>,{" "}
+              <strong className="text-foreground font-medium">Next.js</strong>, and{" "}
+              <strong className="text-foreground font-medium">React Native</strong>. Recent work
+              explores <strong className="text-foreground font-medium">AI Automations</strong> with
+              OpenCV and MediaPipe — low-latency computer vision tools that deliver intelligent
+              solutions in real time.
+            </p>
+          </ScrollReveal>
+        </div>
+
+        <section className="mt-20">
+          <ScrollReveal>
+            <h2 className="font-display text-2xl md:text-3xl font-medium tracking-tight text-foreground mb-10">
+              What I value
+            </h2>
+          </ScrollReveal>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-px bg-border/60 border border-border/60">
+            {values.map((v, idx) => (
+              <ScrollReveal key={v.title} delay={idx * 0.06}>
+                <div className="p-6 md:p-7 bg-background h-full">
+                  <p className="font-mono text-[10px] tracking-[0.18em] uppercase text-primary mb-3">
+                    0{idx + 1}
+                  </p>
+                  <h3 className="font-display text-lg font-medium text-foreground mb-2">
+                    {v.title}
+                  </h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{v.description}</p>
                 </div>
               </ScrollReveal>
             ))}
           </div>
         </section>
-      )}
+
+        <section className="mt-20">
+          <ScrollReveal>
+            <h2 className="font-display text-2xl md:text-3xl font-medium tracking-tight text-foreground mb-10">
+              Education
+            </h2>
+          </ScrollReveal>
+
+          <div className="space-y-0">
+            {education.map((edu, idx) => (
+              <ScrollReveal key={edu.id} delay={idx * 0.08}>
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-3 md:gap-8 py-7 border-t border-border/70">
+                  <div className="md:col-span-3">
+                    <p className="font-mono text-xs text-muted-foreground">{edu.duration}</p>
+                  </div>
+                  <div className="md:col-span-9">
+                    <h3 className="text-base font-medium text-foreground">{edu.degree}</h3>
+                    <p className="text-sm text-primary mt-1">{edu.school}</p>
+                    <p className="text-sm text-muted-foreground mt-3 leading-relaxed">
+                      {edu.details}
+                    </p>
+                  </div>
+                </div>
+              </ScrollReveal>
+            ))}
+          </div>
+        </section>
+
+        {certificates.length > 0 && (
+          <section className="mt-20">
+            <ScrollReveal>
+              <h2 className="font-display text-2xl md:text-3xl font-medium tracking-tight text-foreground mb-10">
+                Certifications
+              </h2>
+            </ScrollReveal>
+
+            <div className="space-y-0">
+              {certificates.map((cert, idx) => (
+                <ScrollReveal key={cert.id} delay={idx * 0.06}>
+                  <div className="flex items-center justify-between gap-4 py-5 border-t border-border/70">
+                    <div>
+                      <h3 className="text-sm font-medium text-foreground">{cert.title}</h3>
+                      <p className="font-mono text-[11px] text-muted-foreground mt-1">
+                        {cert.issuer} · {cert.issueDate}
+                      </p>
+                    </div>
+                    {cert.credentialUrl && (
+                      <a
+                        href={cert.credentialUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-muted-foreground hover:text-primary transition-colors shrink-0"
+                        aria-label="View credential"
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                      </a>
+                    )}
+                  </div>
+                </ScrollReveal>
+              ))}
+            </div>
+          </section>
+        )}
+      </div>
     </div>
   );
 }

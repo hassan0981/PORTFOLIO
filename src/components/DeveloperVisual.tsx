@@ -1,130 +1,140 @@
 "use client";
 
 import React from "react";
-import { motion } from "framer-motion";
+import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
+
+const orbitTags = [
+  { label: "Next.js", angle: 18 },
+  { label: "TypeScript", angle: 95 },
+  { label: "React Native", angle: 175 },
+  { label: "AI", angle: 255 },
+  { label: "Node.js", angle: 320 },
+];
 
 export default function DeveloperVisual() {
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const springX = useSpring(x, { stiffness: 120, damping: 18 });
+  const springY = useSpring(y, { stiffness: 120, damping: 18 });
+  const rotateX = useTransform(springY, [-0.5, 0.5], [12, -12]);
+  const rotateY = useTransform(springX, [-0.5, 0.5], [-14, 14]);
+
+  function onMove(e: React.MouseEvent<HTMLDivElement>) {
+    const rect = e.currentTarget.getBoundingClientRect();
+    x.set((e.clientX - rect.left) / rect.width - 0.5);
+    y.set((e.clientY - rect.top) / rect.height - 0.5);
+  }
+
+  function onLeave() {
+    x.set(0);
+    y.set(0);
+  }
+
   return (
-    <div className="relative w-full max-w-lg aspect-square flex items-center justify-center">
-      {/* Background soft glowing blur accents */}
-      <div className="absolute -inset-4 bg-gradient-to-tr from-[#61dafb]/10 via-[#7c6ef6]/5 to-[#22d3ee]/10 rounded-full blur-3xl opacity-60 dark:opacity-40 animate-pulse duration-4000" />
-
-      {/* Floating abstract code nodes */}
-      <motion.div
-        animate={{ y: [0, -12, 0] }}
-        transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute top-8 right-6 w-20 h-20 bg-background/40 backdrop-blur-md rounded-xl border border-border p-3 flex flex-col justify-between shadow-lg"
-      >
-        <span className="text-[10px] font-mono text-[#61dafb]">⚡ next.js</span>
-        <div className="h-1.5 w-full bg-border rounded-full overflow-hidden">
-          <motion.div
-            animate={{ width: ["20%", "85%", "20%"] }}
-            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-            className="h-full bg-[#61dafb]"
-          />
-        </div>
-        <span className="text-[8px] font-mono text-muted-foreground">Speed: 99/100</span>
-      </motion.div>
+    <div
+      className="relative w-full max-w-md aspect-square flex items-center justify-center [perspective:1200px]"
+      onMouseMove={onMove}
+      onMouseLeave={onLeave}
+    >
+      {/* Soft atmosphere */}
+      <div className="absolute inset-[12%] rounded-full bg-primary/[0.09] blur-3xl" />
+      <div className="absolute inset-[22%] rounded-full bg-primary/[0.05] blur-2xl" />
 
       <motion.div
-        animate={{ y: [0, 10, 0] }}
-        transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-        className="absolute bottom-12 left-4 w-24 h-16 bg-background/40 backdrop-blur-md rounded-xl border border-border p-3 flex flex-col justify-between shadow-lg"
-      >
-        <span className="text-[10px] font-mono text-[#7c6ef6]">🤖 AI Model</span>
-        <span className="text-[12px] font-mono text-foreground font-bold">99.8% Acc</span>
-      </motion.div>
-
-      {/* Main Terminal Window */}
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
+        style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
+        initial={{ opacity: 0, scale: 0.92 }}
         animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
-        className="w-full h-5/6 rounded-2xl border border-border/60 glass-card flex flex-col overflow-hidden"
+        transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+        className="relative w-[86%] h-[86%] flex items-center justify-center"
       >
-        {/* Window Header */}
-        <div className="h-11 border-b border-border bg-muted/30 px-4 flex items-center justify-between">
-          <div className="flex space-x-2">
-            <span className="w-3 h-3 rounded-full bg-rose-500/80" />
-            <span className="w-3 h-3 rounded-full bg-amber-500/80" />
-            <span className="w-3 h-3 rounded-full bg-emerald-500/80" />
-          </div>
-          <span className="text-xs font-mono text-muted-foreground select-none">
-            hassan-javed.tsx
+        {/* Back plane */}
+        <div
+          className="absolute inset-0 border border-border/40 bg-card/20 backdrop-blur-sm"
+          style={{ transform: "translateZ(-48px) rotateY(-8deg)" }}
+        />
+
+        {/* Mid plane */}
+        <div
+          className="absolute inset-[8%] border border-primary/15 bg-gradient-to-br from-primary/[0.08] via-transparent to-transparent"
+          style={{ transform: "translateZ(-16px) rotateY(4deg)" }}
+        />
+
+        {/* Orbit rings */}
+        <motion.div
+          className="absolute inset-[6%] rounded-full border border-border/50"
+          style={{ transform: "translateZ(8px) rotateX(68deg)" }}
+          animate={{ rotateZ: 360 }}
+          transition={{ duration: 28, repeat: Infinity, ease: "linear" }}
+        />
+        <motion.div
+          className="absolute inset-[16%] rounded-full border border-primary/25"
+          style={{ transform: "translateZ(20px) rotateX(68deg)" }}
+          animate={{ rotateZ: -360 }}
+          transition={{ duration: 22, repeat: Infinity, ease: "linear" }}
+        />
+        <motion.div
+          className="absolute inset-[28%] rounded-full border border-dashed border-border/40"
+          style={{ transform: "translateZ(36px) rotateX(68deg)" }}
+          animate={{ rotateZ: 360 }}
+          transition={{ duration: 40, repeat: Infinity, ease: "linear" }}
+        />
+
+        {/* Core monogram card */}
+        <motion.div
+          className="relative z-10 w-[42%] aspect-square border border-primary/30 bg-background/80 backdrop-blur-xl flex flex-col items-center justify-center shadow-[0_20px_60px_-20px_rgba(94,234,212,0.25)]"
+          style={{ transform: "translateZ(56px)" }}
+          animate={{ y: [0, -8, 0] }}
+          transition={{ duration: 5.5, repeat: Infinity, ease: "easeInOut" }}
+        >
+          <span className="font-display text-4xl sm:text-5xl font-medium tracking-tight gradient-text">
+            HJ
           </span>
-          <div className="w-12" /> {/* spacing element */}
-        </div>
+          <span className="mt-2 font-mono text-[9px] sm:text-[10px] tracking-[0.22em] uppercase text-muted-foreground">
+            Full Stack
+          </span>
+        </motion.div>
 
-        {/* Code Content Editor Area */}
-        <div className="flex-1 p-5 font-mono text-xs overflow-hidden flex flex-col justify-between">
-          <div className="space-y-2">
-            {/* Import statement */}
-            <div className="flex space-x-1.5 text-[#61dafb]">
-              <span className="text-[#7c6ef6]">import</span>
-              <span className="text-foreground">Developer</span>
-              <span className="text-[#7c6ef6]">from</span>
-              <span className="text-[#22d3ee]">"@/hassan"</span>
-              <span className="text-foreground">;</span>
-            </div>
+        {/* Floating skill chips on orbit */}
+        {orbitTags.map((tag, i) => {
+          const rad = (tag.angle * Math.PI) / 180;
+          const r = 42;
+          const left = 50 + Math.cos(rad) * r;
+          const top = 50 + Math.sin(rad) * r * 0.55;
+          return (
+            <motion.div
+              key={tag.label}
+              className="absolute z-20 px-2.5 py-1 border border-border/70 bg-background/85 backdrop-blur-md font-mono text-[10px] text-muted-foreground whitespace-nowrap"
+              style={{
+                left: `${left}%`,
+                top: `${top}%`,
+                transform: "translate(-50%, -50%) translateZ(72px)",
+              }}
+              animate={{ y: [0, i % 2 === 0 ? -6 : 6, 0] }}
+              transition={{
+                duration: 4 + i * 0.4,
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay: i * 0.2,
+              }}
+            >
+              {tag.label}
+            </motion.div>
+          );
+        })}
 
-            {/* Config declaration */}
-            <div className="text-muted-foreground mt-4 text-[11px] italic">
-              {"// 4+ years of building web & mobile experiences"}
-            </div>
-
-            {/* Object definition */}
-            <div className="space-y-1 mt-2">
-              <div>
-                <span className="text-[#7c6ef6]">const</span>{" "}
-                <span className="text-[#61dafb]">skills</span> = {"{"}
-              </div>
-              <div className="pl-4">
-                <span className="text-foreground">core:</span>{" "}
-                <span className="text-[#22d3ee]">["Next.js", "TypeScript"]</span>,
-              </div>
-              <div className="pl-4">
-                <span className="text-foreground">mobile:</span>{" "}
-                <span className="text-[#22d3ee]">["React Native"]</span>,
-              </div>
-              <div className="pl-4">
-                <span className="text-foreground">backend:</span>{" "}
-                <span className="text-[#22d3ee]">["Node.js", "Supabase"]</span>,
-              </div>
-              <div className="pl-4">
-                <span className="text-foreground">ai:</span>{" "}
-                <span className="text-[#22d3ee]">["OpenCV", "MediaPipe"]</span>
-              </div>
-              <div>{"};"}</div>
-            </div>
-
-            {/* Loop expression */}
-            <div className="space-y-1 mt-4">
-              <div>
-                <span className="text-[#7c6ef6]">export default function</span>{" "}
-                <span className="text-[#61dafb]">BuildApp</span>() {"{"}
-              </div>
-              <div className="pl-4 text-[#7c6ef6]">
-                return <span className="text-foreground">Developer.</span>
-                <span className="text-[#61dafb]">code</span>
-                <span className="text-foreground">({")"}</span>
-              </div>
-              <div>{"}"}</div>
-            </div>
-          </div>
-
-          {/* Typing terminal prompt at the bottom */}
-          <div className="border-t border-border pt-4 flex items-center justify-between text-muted-foreground">
-            <div className="flex items-center space-x-2">
-              <span className="text-primary font-bold">&gt;_</span>
-              <motion.span
-                animate={{ opacity: [1, 0, 1] }}
-                transition={{ duration: 1.2, repeat: Infinity, ease: "linear" }}
-                className="w-1.5 h-3.5 bg-primary"
-              />
-            </div>
-            <span className="text-[10px] text-muted-foreground select-none">UTF-8</span>
-          </div>
-        </div>
+        {/* Accent nodes */}
+        <motion.span
+          className="absolute w-2 h-2 rounded-full bg-primary"
+          style={{ left: "18%", top: "22%", transform: "translateZ(80px)" }}
+          animate={{ opacity: [0.4, 1, 0.4], scale: [1, 1.35, 1] }}
+          transition={{ duration: 2.8, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <motion.span
+          className="absolute w-1.5 h-1.5 rounded-full bg-primary/70"
+          style={{ right: "16%", bottom: "26%", transform: "translateZ(64px)" }}
+          animate={{ opacity: [0.3, 0.9, 0.3], scale: [1, 1.4, 1] }}
+          transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut", delay: 0.6 }}
+        />
       </motion.div>
     </div>
   );

@@ -2,159 +2,186 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useTheme } from "next-themes";
-import { Sun, Moon, Menu, X, FileText } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLenis } from "@/components/SmoothScrollProvider";
+import ThemeToggle from "@/components/ThemeToggle";
 
 const navItems = [
-  { name: "Home", href: "/" },
-  { name: "About", href: "/about" },
-  { name: "Projects", href: "/projects" },
-  { name: "Experience", href: "/experience" },
-  { name: "Skills", href: "/skills" },
-  { name: "Contact", href: "/contact" },
+  { name: "About", id: "about" },
+  { name: "Projects", id: "projects" },
+  { name: "Experience", id: "experience" },
+  { name: "Skills", id: "skills" },
+  { name: "Contact", id: "contact" },
 ];
 
 export default function Navbar() {
   const pathname = usePathname();
-  const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = React.useState(false);
+  const router = useRouter();
+  const { scrollTo } = useLenis();
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
   const [scrolled, setScrolled] = React.useState(false);
+  const [activeSection, setActiveSection] = React.useState<string>("about");
 
   React.useEffect(() => {
-    setMounted(true);
-    const handleScroll = () => {
-      if (window.scrollY > 20) {
-        setScrolled(true);
-      } else {
-        setScrolled(false);
-      }
-    };
-    window.addEventListener("scroll", handleScroll);
+    const handleScroll = () => setScrolled(window.scrollY > 16);
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Avoid hydration mismatch by rendering a placeholder
-  const renderThemeToggle = () => {
-    if (!mounted) {
-      return <div className="w-9 h-9 rounded-lg bg-secondary/50 animate-pulse" />;
+  React.useEffect(() => {
+    if (pathname !== "/") {
+      setActiveSection("");
+      return;
     }
-    return (
-      <button
-        onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-        className="w-9 h-9 rounded-lg flex items-center justify-center border border-border bg-background hover:bg-secondary transition-colors cursor-pointer"
-        aria-label="Toggle theme"
-      >
-        {theme === "dark" ? (
-          <Sun className="h-4.5 w-4.5 text-yellow-500" />
-        ) : (
-          <Moon className="h-4.5 w-4.5 text-indigo-600" />
-        )}
-      </button>
-    );
+
+    const observers: IntersectionObserver[] = [];
+    navItems.forEach((item) => {
+      const el = document.getElementById(item.id);
+      if (!el) return;
+      const observer = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting) {
+            setActiveSection(item.id);
+            window.history.replaceState(null, "", `#${item.id}`);
+          }
+        },
+        { rootMargin: "-35% 0px -50% 0px", threshold: 0 }
+      );
+      observer.observe(el);
+      observers.push(observer);
+    });
+
+    return () => observers.forEach((o) => o.disconnect());
+  }, [pathname]);
+
+  React.useEffect(() => {
+    if (!mobileMenuOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [mobileMenuOpen]);
+
+  React.useEffect(() => {
+    const onResize = () => {
+      if (window.innerWidth >= 768) setMobileMenuOpen(false);
+    };
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  const goToSection = (id: string) => {
+    setMobileMenuOpen(false);
+    if (pathname !== "/") {
+      sessionStorage.setItem("scroll-to-section", id);
+      router.push("/");
+      return;
+    }
+    scrollTo(`#${id}`);
+    window.history.replaceState(null, "", `#${id}`);
+    setActiveSection(id);
   };
 
   return (
     <header
       className={cn(
-        "sticky top-0 z-50 w-full transition-all duration-300 border-b",
-        scrolled
-          ? "bg-background/85 backdrop-blur-md border-border/80 shadow-sm"
-          : "bg-transparent border-transparent"
+        "sticky top-0 z-50 w-full transition-all duration-500",
+        scrolled || mobileMenuOpen ? "bg-background/70 backdrop-blur-xl border-b border-border/50 dark:border-transparent" : "bg-transparent"
       )}
     >
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        {/* Logo */}
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between gap-3 sm:gap-4">
         <Link
           href="/"
-          className="font-mono text-lg font-bold tracking-tight text-foreground hover:opacity-85 transition-opacity"
+          onClick={(e) => {
+            if (pathname === "/") {
+              e.preventDefault();
+              scrollTo(0);
+              window.history.replaceState(null, "", "/");
+              setActiveSection("about");
+            }
+            setMobileMenuOpen(false);
+          }}
+          className="font-sans text-base sm:text-lg font-semibold tracking-tight text-foreground shrink-0"
         >
-          <span className="text-primary">&lt;</span>
-          <span>MHJ</span>
-          <span className="text-primary"> /&gt;</span>
+          Hassan<span className="text-primary">.</span>
         </Link>
 
-        {/* Desktop Nav links */}
-        <nav className="hidden md:flex items-center space-x-6">
+        <nav className="hidden md:flex items-center rounded-full border border-border/70 bg-card/60 backdrop-blur-md p-0.5 lg:p-1 max-w-[min(100%,28rem)] lg:max-w-none overflow-x-auto scrollbar-none dark:border-white/10 dark:bg-white/[0.03]">
           {navItems.map((item) => {
-            const isActive = pathname === item.href;
+            const isActive = pathname === "/" && activeSection === item.id;
             return (
-              <Link
-                key={item.href}
-                href={item.href}
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => goToSection(item.id)}
                 className={cn(
-                  "text-sm font-medium transition-colors hover:text-primary relative py-1",
-                  isActive ? "text-primary" : "text-muted-foreground"
+                  "shrink-0 px-2.5 lg:px-4 py-1.5 rounded-full text-[12px] lg:text-[13px] transition-all cursor-pointer border-0",
+                  isActive
+                    ? "bg-primary text-primary-foreground font-medium shadow-sm shadow-primary/20"
+                    : "bg-transparent text-muted-foreground hover:text-foreground"
                 )}
               >
                 {item.name}
-                {isActive && (
-                  <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-primary rounded-full" />
-                )}
-              </Link>
+              </button>
             );
           })}
         </nav>
 
-        {/* Action Buttons */}
-        <div className="hidden md:flex items-center space-x-3">
-          {renderThemeToggle()}
-          <Link
-            href="/resume"
-            className="inline-flex items-center space-x-1.5 text-xs font-semibold px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/95 transition-all shadow-sm shadow-primary/10 cursor-pointer"
+        <div className="hidden md:flex items-center shrink-0 gap-2 lg:gap-2.5">
+          <button
+            type="button"
+            onClick={() => goToSection("contact")}
+            className="rounded-full bg-primary text-primary-foreground text-[12px] lg:text-[13px] font-medium px-4 lg:px-5 py-1.5 lg:py-2 hover:bg-primary/90 transition-colors cursor-pointer border-0"
           >
-            <FileText className="h-3.5 w-3.5" />
-            <span>Resume</span>
-          </Link>
+            Let&apos;s Talk
+          </button>
+          <ThemeToggle />
         </div>
 
-        {/* Mobile menu button */}
-        <div className="flex items-center space-x-3 md:hidden">
-          {renderThemeToggle()}
+        <div className="md:hidden flex items-center gap-2">
+          <ThemeToggle />
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="p-1.5 rounded-lg border border-border text-foreground hover:bg-secondary cursor-pointer"
-            aria-label="Open main menu"
+            className="p-2.5 rounded-full border border-border/80 text-foreground cursor-pointer bg-card/60 dark:border-white/10 dark:bg-transparent"
+            aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+            aria-expanded={mobileMenuOpen}
           >
             {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
         </div>
       </div>
 
-      {/* Mobile menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-b border-border bg-background/95 backdrop-blur-md animate-in fade-in slide-in-from-top-4 duration-200">
-          <div className="px-4 pt-2 pb-6 space-y-2">
+        <div className="md:hidden border-t border-border/70 bg-background/95 backdrop-blur-xl max-h-[calc(100svh-3.5rem)] overflow-y-auto dark:border-white/10">
+          <div className="px-4 py-4 space-y-1">
             {navItems.map((item) => {
-              const isActive = pathname === item.href;
+              const isActive = pathname === "/" && activeSection === item.id;
               return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => setMobileMenuOpen(false)}
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => goToSection(item.id)}
                   className={cn(
-                    "block px-3 py-2 rounded-lg text-base font-medium transition-colors",
+                    "w-full text-left px-4 py-3 rounded-full text-sm cursor-pointer border-0",
                     isActive
-                      ? "bg-secondary text-primary font-semibold"
-                      : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-transparent text-muted-foreground hover:text-foreground"
                   )}
                 >
                   {item.name}
-                </Link>
+                </button>
               );
             })}
-            <div className="pt-4 border-t border-border">
-              <Link
-                href="/resume"
-                onClick={() => setMobileMenuOpen(false)}
-                className="w-full flex items-center justify-center space-x-2 text-sm font-semibold px-4 py-2.5 rounded-lg bg-primary text-primary-foreground hover:bg-primary/95 transition-colors cursor-pointer"
-              >
-                <FileText className="h-4 w-4" />
-                <span>Resume</span>
-              </Link>
-            </div>
+            <button
+              type="button"
+              onClick={() => goToSection("contact")}
+              className="mt-2 w-full rounded-full bg-primary text-primary-foreground text-sm font-medium px-4 py-3 cursor-pointer border-0"
+            >
+              Let&apos;s Talk
+            </button>
           </div>
         </div>
       )}
