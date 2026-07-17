@@ -7,6 +7,7 @@ import { dbService } from "@/lib/dbService";
 const contactSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Invalid email address"),
+  phone: z.string().optional().nullable(),
   subject: z.string().min(3, "Subject must be at least 3 characters"),
   message: z.string().min(10, "Message must be at least 10 characters"),
 });
@@ -28,12 +29,13 @@ export async function POST(request: Request) {
       );
     }
 
-    const { name, email, subject, message } = result.data;
+    const { name, email, phone, subject, message } = result.data;
 
     // 1. Store submission in database using our dbService
     const savedMessage = await dbService.saveMessage({
       name,
       email,
+      phone: phone || null,
       subject,
       message,
     });
@@ -42,7 +44,7 @@ export async function POST(request: Request) {
     let emailSent = false;
     if (resend) {
       try {
-        const adminEmail = process.env.ADMIN_RECEIVER_EMAIL || "mhassanjaved@gmail.com";
+        const adminEmail = process.env.ADMIN_RECEIVER_EMAIL || "hass.javed25@gmail.com";
         const emailResult = await resend.emails.send({
           from: "Portfolio Contact <onboarding@resend.dev>",
           to: adminEmail,
@@ -51,6 +53,7 @@ export async function POST(request: Request) {
             <h2>New Contact Message Received</h2>
             <p><strong>Name:</strong> ${name}</p>
             <p><strong>Email:</strong> ${email}</p>
+            ${phone ? `<p><strong>Phone:</strong> ${phone}</p>` : ""}
             <p><strong>Subject:</strong> ${subject}</p>
             <p><strong>Message:</strong></p>
             <p style="white-space: pre-wrap; background: #f4f4f5; padding: 12px; border-radius: 6px;">${message}</p>

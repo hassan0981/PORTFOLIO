@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 const contactSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Please enter a valid email address"),
+  phone: z.string().optional().or(z.literal("")),
   subject: z.string().min(3, "Subject must be at least 3 characters"),
   message: z.string().min(10, "Message must be at least 10 characters"),
 });
@@ -34,6 +35,7 @@ export default function ContactForm() {
     defaultValues: {
       name: "",
       email: "",
+      phone: "",
       subject: "",
       message: "",
     },
@@ -153,24 +155,46 @@ export default function ContactForm() {
               </div>
             </div>
 
-            <div className="space-y-1.5">
-              <label
-                htmlFor="subject"
-                className="font-mono text-[10px] tracking-[0.18em] uppercase text-muted-foreground"
-              >
-                Subject
-              </label>
-              <Input
-                id="subject"
-                type="text"
-                placeholder="Project inquiry / collaboration"
-                className={`bg-background/50 border-border rounded-md ${errors.subject ? "border-destructive focus-visible:ring-destructive" : ""}`}
-                {...register("subject")}
-                disabled={isSubmitting}
-              />
-              {errors.subject && (
-                <p className="text-xs font-medium text-destructive">{errors.subject.message}</p>
-              )}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label
+                  htmlFor="phone"
+                  className="font-mono text-[10px] tracking-[0.18em] uppercase text-muted-foreground"
+                >
+                  Phone Number (Optional)
+                </label>
+                <Input
+                  id="phone"
+                  type="tel"
+                  placeholder="+1 (555) 000-0000"
+                  className={`bg-background/50 border-border rounded-md ${errors.phone ? "border-destructive focus-visible:ring-destructive" : ""}`}
+                  {...register("phone")}
+                  disabled={isSubmitting}
+                />
+                {errors.phone && (
+                  <p className="text-xs font-medium text-destructive">{errors.phone.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-1.5">
+                <label
+                  htmlFor="subject"
+                  className="font-mono text-[10px] tracking-[0.18em] uppercase text-muted-foreground"
+                >
+                  Subject
+                </label>
+                <Input
+                  id="subject"
+                  type="text"
+                  placeholder="Project inquiry / collaboration"
+                  className={`bg-background/50 border-border rounded-md ${errors.subject ? "border-destructive focus-visible:ring-destructive" : ""}`}
+                  {...register("subject")}
+                  disabled={isSubmitting}
+                />
+                {errors.subject && (
+                  <p className="text-xs font-medium text-destructive">{errors.subject.message}</p>
+                )}
+              </div>
             </div>
 
             <div className="space-y-1.5">

@@ -40,7 +40,7 @@ export default function SectionAccent({
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 50);
-    camera.position.z = 5.2;
+    camera.position.z = 5.8;
 
     const renderer = new THREE.WebGLRenderer({
       antialias: true,

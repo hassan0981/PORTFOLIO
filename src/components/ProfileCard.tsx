@@ -14,7 +14,7 @@ export default function ProfileCard({ projectCount = 20 }: ProfileCardProps) {
     const img = new window.Image();
     img.onload = () => setHasPhoto(true);
     img.onerror = () => setHasPhoto(false);
-    img.src = "/profile.jpg";
+    img.src = "/profile.png";
   }, []);
 
   return (
@@ -44,7 +44,7 @@ export default function ProfileCard({ projectCount = 20 }: ProfileCardProps) {
               {hasPhoto ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
-                  src="/profile.jpg"
+                  src="/profile.png"
                   alt="Muhammad Hassan Javed"
                   className="absolute inset-0 h-full w-full object-cover"
                 />

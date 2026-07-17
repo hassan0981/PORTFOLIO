@@ -477,8 +477,15 @@ export default function AdminConsole({
                 <div key={msg.id} className="bg-card border border-border p-5 rounded-2xl space-y-3">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 border-b border-border/40 pb-3">
                     <div>
-                      <p className="font-bold text-foreground text-xs">{msg.name}</p>
-                      <p className="text-[10px] text-muted-foreground font-mono mt-0.5">{msg.email}</p>
+                      <div className="flex items-center space-x-2">
+                        <p className="font-bold text-foreground text-xs">{msg.name}</p>
+                        <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/20 uppercase tracking-wider">
+                          {msg.status || "Pending"}
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-muted-foreground font-mono mt-0.5">
+                        {msg.email} {msg.phone ? `| Tel: ${msg.phone}` : ""}
+                      </p>
                     </div>
                     <div className="flex items-center space-x-3 shrink-0">
                       <span className="text-[10px] font-mono text-muted-foreground">

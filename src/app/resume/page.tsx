@@ -56,9 +56,9 @@ export default async function ResumePage() {
                 Full Stack Developer & AI Automation Engineer
               </p>
               <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-muted-foreground font-mono">
-                <span>mhassanjaved@gmail.com</span>
+                <span>hass.javed25@gmail.com</span>
                 <span className="text-border">·</span>
-                <span>linkedin.com/in/mhassanjaved</span>
+                <span>linkedin.com/in/muhammad-hassan-javed-4197212b7</span>
                 <span className="text-border">·</span>
                 <span>github.com/mhassanjaved</span>
               </div>

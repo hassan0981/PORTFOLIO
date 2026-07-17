@@ -68,19 +68,20 @@ export default function ProjectsGrid({ projects }: ProjectsGridProps) {
               className="h-full"
             >
               <HoverLift className="h-full">
-                <article className="surface surface-hover flex flex-col justify-between group h-full">
-                  <div className="aspect-[16/10] relative overflow-hidden bg-muted/80 dark:bg-[#0a0b0f] flex flex-col justify-center items-center p-6 text-center border-b border-border/70">
-                    <span className="font-mono text-[10px] tracking-[0.2em] uppercase text-primary/70 mb-2">
+                <article className="panel-surface h-full rounded-2xl overflow-hidden flex flex-col justify-between group hover:border-teal-500/35 hover:shadow-lg hover:shadow-teal-500/[0.02] dark:hover:shadow-[0_20px_50px_-25px_rgba(94,234,212,0.15)] transition-all duration-300">
+                  <div className="aspect-[16/10] bg-gradient-to-br from-teal-500/5 via-background to-teal-500/[0.02] border-b border-border/70 dark:from-[#081b1c] dark:via-[#07080c] dark:to-[#091518] dark:border-white/10 flex flex-col items-center justify-center p-6 text-center relative overflow-hidden">
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(20,184,166,0.12),transparent_55%)] dark:bg-[radial-gradient(circle_at_30%_20%,rgba(94,234,212,0.12),transparent_55%)]" />
+                    <span className="relative font-mono text-[9px] tracking-[0.2em] uppercase text-teal-600 dark:text-teal-300 font-semibold mb-1.5">
                       Project
                     </span>
-                    <h3 className="text-foreground text-xl font-display font-medium tracking-tight mb-3">
+                    <h3 className="relative text-foreground text-xl font-display font-medium tracking-tight mb-3 group-hover:text-teal-600 dark:group-hover:text-teal-300 transition-colors">
                       {project.title}
                     </h3>
-                    <div className="flex flex-wrap justify-center gap-1.5 max-w-xs">
+                    <div className="relative flex flex-wrap justify-center gap-1.5 max-w-xs">
                       {project.tags.slice(0, 4).map((t) => (
                         <span
                           key={t}
-                          className="text-[10px] px-2 py-0.5 border border-border text-muted-foreground font-mono dark:border-white/15 dark:text-white/70"
+                          className="text-[9px] px-2.5 py-0.5 rounded-full border border-teal-200/60 bg-teal-50/50 text-teal-700 font-mono font-bold dark:border-teal-500/30 dark:bg-teal-500/10 dark:text-teal-300"
                         >
                           {t}
                         </span>
@@ -90,10 +91,7 @@ export default function ProjectsGrid({ projects }: ProjectsGridProps) {
 
                   <div className="p-5 flex-grow flex flex-col justify-between">
                     <div>
-                      <h4 className="text-base font-medium text-foreground group-hover:text-primary transition-colors">
-                        {project.title}
-                      </h4>
-                      <p className="text-sm text-muted-foreground mt-2 leading-relaxed line-clamp-3">
+                      <p className="text-sm text-zinc-700 dark:text-zinc-300 mt-2 leading-relaxed line-clamp-3 font-medium">
                         {project.description}
                       </p>
 
@@ -101,7 +99,7 @@ export default function ProjectsGrid({ projects }: ProjectsGridProps) {
                         {project.features.slice(0, 2).map((feat, idx) => (
                           <div
                             key={idx}
-                            className="text-xs text-muted-foreground pl-3 relative before:absolute before:left-0 before:top-[0.5em] before:w-1.5 before:h-px before:bg-primary/50"
+                            className="text-xs text-muted-foreground pl-4 relative before:absolute before:left-0 before:top-[0.55em] before:w-1.2 before:h-1.2 before:rounded-full before:bg-primary/50"
                           >
                             {feat}
                           </div>

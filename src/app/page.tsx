@@ -103,7 +103,7 @@ export default async function Home() {
                       <Github className="h-4 w-4" />
                     </a>
                     <a
-                      href="https://linkedin.com/in/mhassanjaved"
+                      href="https://linkedin.com/in/muhammad-hassan-javed-4197212b7"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="icon-chip h-11 w-11 sm:h-10 sm:w-10 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-primary/40 transition-colors"
@@ -112,7 +112,7 @@ export default async function Home() {
                       <Linkedin className="h-4 w-4" />
                     </a>
                     <a
-                      href="mailto:mhassanjaved@gmail.com"
+                      href="mailto:hass.javed25@gmail.com"
                       className="icon-chip h-11 w-11 sm:h-10 sm:w-10 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-primary/40 transition-colors"
                       aria-label="Email"
                     >
@@ -175,7 +175,7 @@ export default async function Home() {
       >
         <SectionAccentLazy
           variant="orb"
-          className="hidden md:block right-[-5%] top-1/2 -translate-y-1/2 w-[280px] h-[280px] md:w-[380px] md:h-[380px] opacity-70"
+          className="hidden md:block left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 w-[280px] h-[280px] md:w-[380px] md:h-[380px] opacity-45 pointer-events-none"
           opacity={0.32}
         />
         <div className="section-inner relative">
@@ -202,16 +202,16 @@ export default async function Home() {
             </ScrollReveal>
 
             <ScrollReveal delay={0.15}>
-              <div className="panel-surface rounded-2xl p-5 sm:p-6 md:p-7 h-full hover:-translate-y-1 hover:border-primary/25 transition-all duration-300">
+              <div className="panel-surface rounded-2xl p-5 sm:p-6 md:p-7 h-full hover:-translate-y-1 hover:border-primary/30 hover:shadow-md hover:shadow-primary/[0.01] transition-all duration-300">
                 <h3 className="font-display text-lg sm:text-xl text-foreground mb-4 sm:mb-5">Education</h3>
                 <div className="space-y-4">
                   {education.slice(0, 2).map((edu) => (
-                    <div key={edu.id} className="border-l border-primary/40 pl-4">
-                      <p className="font-mono text-[11px] tracking-wide text-muted-foreground">
+                    <div key={edu.id} className="group border-l-2 border-primary/25 hover:border-primary pl-4 transition-colors duration-300">
+                      <p className="font-mono text-[11px] tracking-wide text-muted-foreground group-hover:text-primary transition-colors">
                         {edu.duration}
                       </p>
                       <p className="text-sm font-medium text-foreground mt-1">{edu.degree}</p>
-                      <p className="text-xs text-primary mt-0.5">{edu.school}</p>
+                      <p className="text-xs text-primary mt-0.5 font-medium">{edu.school}</p>
                     </div>
                   ))}
                 </div>
@@ -228,7 +228,7 @@ export default async function Home() {
       >
         <SectionAccentLazy
           variant="lattice"
-          className="hidden md:block left-[-8%] top-16 w-[240px] h-[240px] md:w-[320px] md:h-[320px] opacity-60"
+          className="hidden md:block left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 w-[240px] h-[240px] md:w-[320px] md:h-[320px] opacity-40 pointer-events-none"
           opacity={0.26}
         />
         <div className="section-inner relative">
@@ -249,20 +249,20 @@ export default async function Home() {
               <ScrollReveal key={project.id} delay={idx * 0.08}>
                 <TiltCard className="h-full">
                   <HoverLift className="h-full">
-                    <article className="panel-surface h-full rounded-2xl overflow-hidden flex flex-col group dark:shadow-[0_20px_50px_-30px_rgba(0,0,0,0.8)]">
-                      <div className="aspect-[16/10] bg-muted/80 border-b border-border/70 dark:bg-[#0a0c12] dark:border-white/10 flex flex-col items-center justify-center p-5 text-center relative overflow-hidden">
-                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(15,118,110,0.12),transparent_55%)] dark:bg-[radial-gradient(circle_at_30%_20%,rgba(94,234,212,0.12),transparent_55%)]" />
-                        <span className="relative font-mono text-[9px] tracking-[0.2em] uppercase text-primary mb-1.5">
+                    <article className="panel-surface h-full rounded-2xl overflow-hidden flex flex-col group hover:border-teal-500/35 hover:shadow-lg hover:shadow-teal-500/[0.02] dark:hover:shadow-[0_20px_50px_-25px_rgba(94,234,212,0.15)] transition-all duration-300">
+                      <div className="aspect-[16/10] bg-gradient-to-br from-teal-500/5 via-background to-teal-500/[0.02] border-b border-border/70 dark:from-[#081b1c] dark:via-[#07080c] dark:to-[#091518] dark:border-white/10 flex flex-col items-center justify-center p-5 text-center relative overflow-hidden">
+                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(20,184,166,0.12),transparent_55%)] dark:bg-[radial-gradient(circle_at_30%_20%,rgba(94,234,212,0.12),transparent_55%)]" />
+                        <span className="relative font-mono text-[9px] tracking-[0.2em] uppercase text-teal-600 dark:text-teal-300 font-semibold mb-1.5">
                           Project
                         </span>
-                        <h3 className="relative text-foreground text-base font-display font-medium tracking-tight">
+                        <h3 className="relative text-foreground text-base font-display font-medium tracking-tight group-hover:text-teal-600 dark:group-hover:text-teal-300 transition-colors">
                           {project.title}
                         </h3>
                         <div className="relative flex flex-wrap justify-center gap-1.5 mt-3">
                           {project.tags.slice(0, 3).map((t) => (
                             <span
                               key={t}
-                              className="text-[9px] px-2 py-0.5 border border-border text-muted-foreground font-mono dark:border-white/20"
+                              className="text-[9px] px-2.5 py-0.5 rounded-full border border-teal-200/60 bg-teal-50/50 text-teal-700 font-mono font-bold dark:border-teal-500/30 dark:bg-teal-500/10 dark:text-teal-300"
                             >
                               {t}
                             </span>
@@ -272,10 +272,7 @@ export default async function Home() {
 
                       <div className="p-4 flex-grow flex flex-col items-center text-center justify-between">
                         <div>
-                          <h3 className="text-sm font-medium text-foreground group-hover:text-primary transition-colors">
-                            {project.title}
-                          </h3>
-                          <p className="text-xs text-muted-foreground mt-1.5 line-clamp-2 leading-relaxed">
+                          <p className="text-xs text-zinc-700 dark:text-zinc-300 mt-1.5 line-clamp-2 leading-relaxed font-medium">
                             {project.description}
                           </p>
                         </div>
@@ -341,7 +338,7 @@ export default async function Home() {
       >
         <SectionAccentLazy
           variant="prism"
-          className="hidden md:block right-[-4%] bottom-10 w-[240px] h-[240px] md:w-[300px] md:h-[300px] opacity-65"
+          className="hidden md:block left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 w-[240px] h-[240px] md:w-[300px] md:h-[300px] opacity-45 pointer-events-none"
           opacity={0.28}
         />
         <div className="section-inner relative">
@@ -356,22 +353,23 @@ export default async function Home() {
           <div className="mt-10 sm:mt-12 md:mt-14 space-y-3 sm:space-y-4">
             {experiences.map((exp, idx) => (
               <ScrollReveal key={exp.id} delay={idx * 0.08}>
-                <div className="panel-surface grid grid-cols-1 md:grid-cols-12 gap-3 md:gap-8 rounded-2xl px-4 py-5 sm:px-5 sm:py-6 md:px-7 hover:-translate-y-1 hover:border-primary/25 transition-all duration-300">
+                <div className="panel-surface relative grid grid-cols-1 md:grid-cols-12 gap-3 md:gap-8 rounded-2xl px-4 py-5 sm:px-5 sm:py-6 md:px-7 hover:-translate-y-1 hover:border-primary/30 hover:shadow-md hover:shadow-primary/[0.02] dark:hover:shadow-[0_20px_50px_-30px_rgba(94,234,212,0.1)] transition-all duration-300 overflow-hidden group">
+                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary scale-y-0 group-hover:scale-y-100 transition-transform duration-300 origin-center" />
                   <div className="md:col-span-3">
-                    <p className="font-mono text-[11px] sm:text-xs text-muted-foreground tracking-wide">
+                    <p className="font-mono text-[11px] sm:text-xs text-muted-foreground tracking-wide group-hover:text-primary transition-colors">
                       {exp.duration}
                     </p>
                   </div>
                   <div className="md:col-span-9">
-                    <h3 className="text-base sm:text-lg font-display font-medium text-foreground">
+                    <h3 className="text-base sm:text-lg font-display font-medium text-foreground group-hover:text-primary transition-colors">
                       {exp.role}
                     </h3>
-                    <p className="text-sm text-primary mt-1">{exp.company}</p>
+                    <p className="text-sm text-primary mt-1 font-medium">{exp.company}</p>
                     <ul className="mt-4 space-y-2 text-sm text-muted-foreground leading-relaxed">
                       {exp.responsibilities.slice(0, 3).map((resp, rid) => (
                         <li
                           key={rid}
-                          className="pl-4 relative before:absolute before:left-0 before:top-[0.55em] before:w-1.5 before:h-px before:bg-primary/50"
+                          className="pl-5 relative before:absolute before:left-0 before:top-[0.55em] before:w-1.5 before:h-1.5 before:rounded-full before:bg-primary/50"
                         >
                           {resp}
                         </li>
@@ -437,7 +435,7 @@ export default async function Home() {
       >
         <SectionAccentLazy
           variant="rings"
-          className="hidden md:block right-[-6%] top-1/2 -translate-y-1/2 w-[300px] h-[300px] md:w-[400px] md:h-[400px] opacity-60"
+          className="hidden md:block left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 w-[300px] h-[300px] md:w-[400px] md:h-[400px] opacity-45 pointer-events-none"
           opacity={0.3}
         />
         <div className="section-inner relative">
@@ -459,10 +457,10 @@ export default async function Home() {
                       Email
                     </p>
                     <a
-                      href="mailto:mhassanjaved@gmail.com"
+                      href="mailto:hass.javed25@gmail.com"
                       className="text-sm text-foreground hover:text-primary transition-colors break-all"
                     >
-                      mhassanjaved@gmail.com
+                      hass.javed25@gmail.com
                     </a>
                   </div>
                 </ScrollReveal>
@@ -472,12 +470,12 @@ export default async function Home() {
                       LinkedIn
                     </p>
                     <a
-                      href="https://linkedin.com/in/mhassanjaved"
+                      href="https://www.linkedin.com/in/muhammad-hassan-javed-4197212b7"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-sm text-foreground hover:text-primary transition-colors break-all"
                     >
-                      linkedin.com/in/mhassanjaved
+                      linkedin.com/in/muhammad-hassan-javed-4197212b7
                     </a>
                   </div>
                 </ScrollReveal>

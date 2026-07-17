@@ -90,7 +90,7 @@ export default function Footer() {
                   <Github className="h-4 w-4" />
                 </a>
                 <a
-                  href="https://linkedin.com/in/mhassanjaved"
+                  href="https://www.linkedin.com/in/muhammad-hassan-javed-4197212b7"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-9 h-9 rounded-md border border-border/70 flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-primary/40 transition-colors bg-card/50 dark:bg-transparent"
@@ -99,7 +99,7 @@ export default function Footer() {
                   <Linkedin className="h-4 w-4" />
                 </a>
                 <a
-                  href="mailto:mhassanjaved@gmail.com"
+                  href="mailto:hass.javed25@gmail.com"
                   className="w-9 h-9 rounded-md border border-border/70 flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-primary/40 transition-colors bg-card/50 dark:bg-transparent"
                   aria-label="Email"
                 >

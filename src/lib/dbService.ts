@@ -21,9 +21,12 @@ export interface MessageData {
   id: string;
   name: string;
   email: string;
+  phone?: string | null;
   subject: string;
   message: string;
+  status?: string;
   createdAt: string;
+  updatedAt?: string;
 }
 
 export interface ExperienceData {
@@ -185,7 +188,7 @@ let mockExperiences: ExperienceData[] = [
     id: "exp-1",
     role: "React Native App Developer",
     company: "ACME ONE",
-    duration: "2024 - Present",
+    duration: "3 Months",
     responsibilities: [
       "Built multiple high-performance React Native applications for iOS and Android.",
       "Integrated secure REST APIs, payment gateways, and third-party authentication services.",
@@ -199,7 +202,7 @@ let mockExperiences: ExperienceData[] = [
     id: "exp-2",
     role: "Freelance Full Stack Developer",
     company: "Remote / Self-Employed",
-    duration: "2022 - 2024",
+    duration: "2025 - Present",
     responsibilities: [
       "Designed and developed customized web applications, landing pages, and API integrations for local and global clients.",
       "Built content management portals (CMS) and e-commerce platforms using the MERN stack and Next.js.",
@@ -215,7 +218,7 @@ let mockEducation: EducationData[] = [
     id: "edu-1",
     school: "University of Central Punjab",
     degree: "Bachelor of Science in Computer Science (BSCS)",
-    duration: "2020 - 2024",
+    duration: "2022 - 2026",
     details: "Graduated with honors. Specialized in Software Engineering, Computer Vision, and Artificial Intelligence. Active member of the computer science society and contributor to open source projects.",
     order: 1,
   },
@@ -262,57 +265,14 @@ export const dbService = {
 
   // Projects
   async getProjects(): Promise<ProjectData[]> {
-    const isAvail = await this.isDbAvailable();
-    if (isAvail) {
-      try {
-        const projs = await prisma.project.findMany({
-          orderBy: { order: "asc" },
-        });
-        return projs.map((p) => ({
-          ...p,
-          githubUrl: p.githubUrl || null,
-          liveUrl: p.liveUrl || null,
-        }));
-      } catch (e) {
-        console.error("Prisma error in getProjects:", e);
-      }
-    }
     return mockProjects.sort((a, b) => a.order - b.order);
   },
 
   async getProjectBySlug(slug: string): Promise<ProjectData | null> {
-    const isAvail = await this.isDbAvailable();
-    if (isAvail) {
-      try {
-        const proj = await prisma.project.findFirst({ where: { slug } });
-        if (proj) {
-          return {
-            ...proj,
-            githubUrl: proj.githubUrl || null,
-            liveUrl: proj.liveUrl || null,
-          };
-        }
-      } catch (e) {
-        console.error("Prisma error in getProjectBySlug:", e);
-      }
-    }
     return mockProjects.find((p) => p.slug === slug) || null;
   },
 
   async createProject(data: Omit<ProjectData, "id">): Promise<ProjectData> {
-    const isAvail = await this.isDbAvailable();
-    if (isAvail) {
-      try {
-        const created = await prisma.project.create({ data });
-        return {
-          ...created,
-          githubUrl: created.githubUrl || null,
-          liveUrl: created.liveUrl || null,
-        };
-      } catch (e) {
-        console.error("Prisma error in createProject:", e);
-      }
-    }
     const newProj: ProjectData = {
       ...data,
       id: `proj-${Date.now()}`,
@@ -322,22 +282,6 @@ export const dbService = {
   },
 
   async updateProject(id: string, data: Partial<Omit<ProjectData, "id">>): Promise<ProjectData | null> {
-    const isAvail = await this.isDbAvailable();
-    if (isAvail) {
-      try {
-        const updated = await prisma.project.update({
-          where: { id },
-          data,
-        });
-        return {
-          ...updated,
-          githubUrl: updated.githubUrl || null,
-          liveUrl: updated.liveUrl || null,
-        };
-      } catch (e) {
-        console.error("Prisma error in updateProject:", e);
-      }
-    }
     const idx = mockProjects.findIndex((p) => p.id === id);
     if (idx === -1) return null;
     mockProjects[idx] = { ...mockProjects[idx], ...data } as ProjectData;
@@ -345,22 +289,11 @@ export const dbService = {
   },
 
   async deleteProject(id: string): Promise<boolean> {
-    const isAvail = await this.isDbAvailable();
-    if (isAvail) {
-      try {
-        await prisma.project.delete({ where: { id } });
-        return true;
-      } catch (e) {
-        console.error("Prisma error in deleteProject:", e);
-      }
-    }
     const idx = mockProjects.findIndex((p) => p.id === id);
     if (idx === -1) return false;
     mockProjects.splice(idx, 1);
     return true;
   },
-
-
 
   // Experiences (Mock for now, easy to read/write)
   async getExperiences(): Promise<ExperienceData[]> {
@@ -374,38 +307,10 @@ export const dbService = {
 
   // Certificates
   async getCertificates(): Promise<CertificateData[]> {
-    const isAvail = await this.isDbAvailable();
-    if (isAvail) {
-      try {
-        const certs = await prisma.certificate.findMany({
-          orderBy: { order: "asc" },
-        });
-        return certs.map((c) => ({
-          ...c,
-          credentialUrl: c.credentialUrl || null,
-          imageUrl: c.imageUrl || null,
-        }));
-      } catch (e) {
-        console.error("Prisma error in getCertificates:", e);
-      }
-    }
     return mockCertificates.sort((a, b) => a.order - b.order);
   },
 
   async createCertificate(data: Omit<CertificateData, "id">): Promise<CertificateData> {
-    const isAvail = await this.isDbAvailable();
-    if (isAvail) {
-      try {
-        const created = await prisma.certificate.create({ data });
-        return {
-          ...created,
-          credentialUrl: created.credentialUrl || null,
-          imageUrl: created.imageUrl || null,
-        };
-      } catch (e) {
-        console.error("Prisma error in createCertificate:", e);
-      }
-    }
     const newCert: CertificateData = {
       ...data,
       id: `cert-${Date.now()}`,
@@ -415,15 +320,6 @@ export const dbService = {
   },
 
   async deleteCertificate(id: string): Promise<boolean> {
-    const isAvail = await this.isDbAvailable();
-    if (isAvail) {
-      try {
-        await prisma.certificate.delete({ where: { id } });
-        return true;
-      } catch (e) {
-        console.error("Prisma error in deleteCertificate:", e);
-      }
-    }
     const idx = mockCertificates.findIndex((c) => c.id === id);
     if (idx === -1) return false;
     mockCertificates.splice(idx, 1);
@@ -431,14 +327,30 @@ export const dbService = {
   },
 
   // Messages (Contact Form Submission)
-  async saveMessage(data: Omit<MessageData, "id" | "createdAt">): Promise<MessageData> {
+  async saveMessage(data: Omit<MessageData, "id" | "createdAt" | "updatedAt">): Promise<MessageData> {
     const isAvail = await this.isDbAvailable();
     if (isAvail) {
       try {
-        const created = await prisma.message.create({ data });
+        const created = await prisma.contact.create({
+          data: {
+            name: data.name,
+            email: data.email,
+            phone: data.phone || null,
+            subject: data.subject,
+            message: data.message,
+            status: data.status || "Pending",
+          },
+        });
         return {
-          ...created,
+          id: created.id,
+          name: created.name,
+          email: created.email,
+          phone: created.phone,
+          subject: created.subject,
+          message: created.message,
+          status: created.status,
           createdAt: created.createdAt.toISOString(),
+          updatedAt: created.updatedAt.toISOString(),
         };
       } catch (e) {
         console.error("Prisma error in saveMessage:", e);
@@ -448,6 +360,7 @@ export const dbService = {
       ...data,
       id: `msg-${Date.now()}`,
       createdAt: new Date().toISOString(),
+      status: data.status || "Pending",
     };
     mockMessages.unshift(newMessage);
     return newMessage;
@@ -457,12 +370,19 @@ export const dbService = {
     const isAvail = await this.isDbAvailable();
     if (isAvail) {
       try {
-        const msgs = await prisma.message.findMany({
+        const msgs = await prisma.contact.findMany({
           orderBy: { createdAt: "desc" },
         });
         return msgs.map((m) => ({
-          ...m,
+          id: m.id,
+          name: m.name,
+          email: m.email,
+          phone: m.phone,
+          subject: m.subject,
+          message: m.message,
+          status: m.status,
           createdAt: m.createdAt.toISOString(),
+          updatedAt: m.updatedAt.toISOString(),
         }));
       } catch (e) {
         console.error("Prisma error in getMessages:", e);
@@ -475,7 +395,7 @@ export const dbService = {
     const isAvail = await this.isDbAvailable();
     if (isAvail) {
       try {
-        await prisma.message.delete({ where: { id } });
+        await prisma.contact.delete({ where: { id } });
         return true;
       } catch (e) {
         console.error("Prisma error in deleteMessage:", e);
@@ -489,38 +409,10 @@ export const dbService = {
 
   // Resume URL
   async getResumeUrl(): Promise<string> {
-    const isAvail = await this.isDbAvailable();
-    if (isAvail) {
-      try {
-        const resume = await prisma.resume.findFirst({
-          where: { isActive: true },
-          orderBy: { updatedAt: "desc" },
-        });
-        if (resume) return resume.url;
-      } catch (e) {
-        console.error("Prisma error in getResumeUrl:", e);
-      }
-    }
     return mockResumeUrl;
   },
 
   async updateResumeUrl(url: string): Promise<string> {
-    const isAvail = await this.isDbAvailable();
-    if (isAvail) {
-      try {
-        // Set all others inactive
-        await prisma.resume.updateMany({
-          data: { isActive: false },
-        });
-        // Create new active
-        const created = await prisma.resume.create({
-          data: { url, isActive: true },
-        });
-        return created.url;
-      } catch (e) {
-        console.error("Prisma error in updateResumeUrl:", e);
-      }
-    }
     mockResumeUrl = url;
     return mockResumeUrl;
   },
