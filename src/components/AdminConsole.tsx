@@ -345,7 +345,7 @@ export default function AdminConsole({
   ] as const;
 
   return (
-    <div className="flex h-screen bg-background text-foreground overflow-hidden font-sans select-text">
+    <div className="flex h-screen bg-background text-foreground overflow-hidden font-sans select-text" data-lenis-prevent>
       {/* Toast Notification */}
       <AnimatePresence>
         {msgText.text && (
