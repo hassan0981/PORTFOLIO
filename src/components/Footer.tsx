@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Github, Linkedin, Mail } from "lucide-react";
 import { useLenis } from "@/components/SmoothScrollProvider";
+import { usePathname } from "next/navigation";
 
 const sectionLinks = [
   { name: "About", id: "about" },
@@ -13,6 +14,7 @@ const sectionLinks = [
 ];
 
 export default function Footer() {
+  const pathname = usePathname();
   const currentYear = new Date().getFullYear();
   const { scrollTo } = useLenis();
 
@@ -26,7 +28,10 @@ export default function Footer() {
     window.history.replaceState(null, "", `#${id}`);
   };
 
+  if (pathname?.startsWith("/admin")) return null;
+
   return (
+
     <footer className="w-full border-t border-border/60 mt-auto">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-12 md:py-14">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">

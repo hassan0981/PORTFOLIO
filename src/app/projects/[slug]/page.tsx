@@ -7,6 +7,8 @@ import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { SlideUp, FadeIn } from "@/components/Animated";
 
+export const revalidate = 0;
+
 interface ProjectDetailsProps {
   params: Promise<{ slug: string }>;
 }

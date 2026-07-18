@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import ProjectsGrid from "@/components/ProjectsGrid";
 import { SlideUp } from "@/components/Animated";
 
-export const revalidate = 3600;
+export const revalidate = 0;
 
 export default async function ProjectsPage() {
   const projects = await dbService.getProjects();

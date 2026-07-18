@@ -2,26 +2,37 @@
 
 import React from "react";
 import { useRouter } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
 import {
+  LayoutDashboard,
+  Mail,
   Briefcase,
-  BookOpen,
-  MessageSquare,
   Award,
   Settings,
-  Plus,
+  LogOut,
+  Menu,
+  X,
+  Search,
+  Filter,
   Trash2,
   Edit2,
-  LogOut,
+  Plus,
   Sparkles,
   ExternalLink,
   Github,
   CheckCircle,
+  Clock,
+  AlertCircle,
+  Calendar,
+  User,
+  CheckSquare,
+  ChevronRight,
+  Info,
 } from "lucide-react";
 import { ProjectData, MessageData, CertificateData } from "@/lib/dbService";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
   DialogContent,
@@ -37,6 +48,7 @@ import {
   createCertificate,
   deleteCertificate,
   deleteMessage,
+  updateMessageStatus,
   updateResumeUrl,
   adminLogout,
 } from "@/app/admin/actions";
@@ -48,6 +60,8 @@ interface AdminConsoleProps {
   initialResumeUrl: string;
 }
 
+type TabType = "dashboard" | "queries" | "projects" | "certificates" | "settings";
+
 export default function AdminConsole({
   initialProjects,
   initialMessages,
@@ -56,38 +70,90 @@ export default function AdminConsole({
 }: AdminConsoleProps) {
   const router = useRouter();
 
-  // State Management
+  // Navigation & UI States
+  const [activeTab, setActiveTab] = React.useState<TabType>("dashboard");
+  const [sidebarOpen, setSidebarOpen] = React.useState(false);
+  const [loading, setLoading] = React.useState(false);
+  const [msgText, setMsgText] = React.useState({ text: "", type: "" });
+
+  // Core Data States
   const [projects, setProjects] = React.useState<ProjectData[]>(initialProjects);
   const [messages, setMessages] = React.useState<MessageData[]>(initialMessages);
   const [certificates, setCertificates] = React.useState<CertificateData[]>(initialCertificates);
   const [resumeUrl, setResumeUrl] = React.useState(initialResumeUrl);
 
-  const [loading, setLoading] = React.useState(false);
-  const [msgText, setMsgText] = React.useState({ text: "", type: "" });
+  // Queries Filter & Search
+  const [searchQuery, setSearchQuery] = React.useState("");
+  const [statusFilter, setStatusFilter] = React.useState<string>("All");
 
-  // Dialog / Modal States
+  // Project Modal / Dialog States
   const [projectDialogOpen, setProjectDialogOpen] = React.useState(false);
   const [selectedProject, setSelectedProject] = React.useState<ProjectData | null>(null);
 
+  // Certificate Modal / Dialog States
   const [certDialogOpen, setCertDialogOpen] = React.useState(false);
 
-  // Form input refs/states
+  // Refs
   const projectFormRef = React.useRef<HTMLFormElement>(null);
   const certFormRef = React.useRef<HTMLFormElement>(null);
 
+  // Helper: Toast Message
   const showMsg = (text: string, type: "success" | "error" = "success") => {
     setMsgText({ text, type });
     setTimeout(() => setMsgText({ text: "", type: "" }), 4000);
   };
 
-  // Sign out handler
+  // Logout Handler
   const handleLogout = async () => {
-    await adminLogout();
-    router.push("/");
-    router.refresh();
+    try {
+      await adminLogout();
+      router.push("/");
+      router.refresh();
+    } catch (err) {
+      console.error(err);
+      showMsg("Failed to sign out", "error");
+    }
   };
 
-  // --- PROJECT CRUD ---
+  // --- QUERY / MESSAGE HANDLERS ---
+  const handleUpdateStatus = async (id: string, newStatus: string) => {
+    // Optimistic UI Update
+    const previousMessages = [...messages];
+    setMessages((prev) =>
+      prev.map((msg) => (msg.id === id ? { ...msg, status: newStatus } : msg))
+    );
+
+    try {
+      const res = await updateMessageStatus(id, newStatus);
+      if (res.success) {
+        showMsg(`Query status updated to ${newStatus}`);
+      } else {
+        // Revert on error
+        setMessages(previousMessages);
+        showMsg("Failed to update status", "error");
+      }
+    } catch (err) {
+      console.error(err);
+      setMessages(previousMessages);
+      showMsg("Failed to update status", "error");
+    }
+  };
+
+  const handleDeleteMessage = async (id: string) => {
+    if (!window.confirm("Are you sure you want to delete this query?")) return;
+    try {
+      const res = await deleteMessage(id);
+      if (res.success) {
+        setMessages((prev) => prev.filter((m) => m.id !== id));
+        showMsg("Query deleted successfully");
+      }
+    } catch (err) {
+      console.error(err);
+      showMsg("Failed to delete query", "error");
+    }
+  };
+
+  // --- PROJECT CRUD HANDLERS ---
   const handleSaveProject = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
@@ -100,9 +166,9 @@ export default function AdminConsole({
     const imageUrl = fd.get("imageUrl") as string;
     const tagsString = fd.get("tags") as string;
     const featuresString = fd.get("features") as string;
-    const githubUrl = fd.get("githubUrl") as string || null;
-    const liveUrl = fd.get("liveUrl") as string || null;
-    const order = parseInt(fd.get("order") as string || "0");
+    const githubUrl = (fd.get("githubUrl") as string) || null;
+    const liveUrl = (fd.get("liveUrl") as string) || null;
+    const order = parseInt((fd.get("order") as string) || "0");
 
     const tags = tagsString.split(",").map((s) => s.trim()).filter(Boolean);
     const features = featuresString.split("\n").map((s) => s.trim()).filter(Boolean);
@@ -165,15 +231,13 @@ export default function AdminConsole({
         setProjects((prev) => prev.filter((p) => p.id !== id));
         showMsg("Project deleted successfully");
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
       showMsg("Failed to delete project", "error");
     }
   };
 
-
-
-  // --- CERTIFICATE CRUD ---
+  // --- CERTIFICATE CRUD HANDLERS ---
   const handleSaveCert = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
@@ -220,22 +284,7 @@ export default function AdminConsole({
     }
   };
 
-  // --- MESSAGE DELETE ---
-  const handleDeleteMessage = async (id: string) => {
-    if (!window.confirm("Are you sure you want to delete this feedback message?")) return;
-    try {
-      const res = await deleteMessage(id);
-      if (res.success) {
-        setMessages((prev) => prev.filter((m) => m.id !== id));
-        showMsg("Feedback log deleted");
-      }
-    } catch (err) {
-      console.error(err);
-      showMsg("Failed to delete message", "error");
-    }
-  };
-
-  // --- SETTINGS (RESUME UPDATE) ---
+  // --- SETTINGS HANDLERS ---
   const handleUpdateResume = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
@@ -256,342 +305,802 @@ export default function AdminConsole({
     }
   };
 
+  // --- STATS CALCULATIONS ---
+  const stats = React.useMemo(() => {
+    const total = messages.length;
+    const pending = messages.filter((m) => m.status === "Pending" || !m.status).length;
+    const resolved = messages.filter(
+      (m) => m.status === "Resolved" || m.status === "Completed" || m.status === "Done"
+    ).length;
+    const recent = messages.slice(0, 5); // Assumes already sorted descending
+
+    return { total, pending, resolved, recent };
+  }, [messages]);
+
+  // --- FILTERED MESSAGES ---
+  const filteredMessages = React.useMemo(() => {
+    return messages.filter((msg) => {
+      const matchesSearch =
+        msg.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        msg.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        msg.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        msg.message.toLowerCase().includes(searchQuery.toLowerCase());
+
+      const statusVal = msg.status || "Pending";
+      const matchesStatus =
+        statusFilter === "All" ||
+        statusVal.toLowerCase() === statusFilter.toLowerCase();
+
+      return matchesSearch && matchesStatus;
+    });
+  }, [messages, searchQuery, statusFilter]);
+
+  // Sidebar Menu Items
+  const menuItems = [
+    { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { id: "queries", label: "Contact Queries", icon: Mail, badge: stats.pending },
+    { id: "projects", label: "Projects", icon: Briefcase },
+    { id: "certificates", label: "Certificates", icon: Award },
+    { id: "settings", label: "Settings", icon: Settings },
+  ] as const;
+
   return (
-    <div className="space-y-8 select-text">
-      {/* Header bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/80 pb-6">
-        <div>
-          <div className="flex items-center space-x-2 text-primary font-semibold">
-            <Sparkles className="h-4.5 w-4.5" />
-            <span className="text-xs uppercase tracking-widest font-mono">Console Active</span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground mt-1">
-            Administrator Dashboard
-          </h1>
-        </div>
-
-        <Button
-          onClick={handleLogout}
-          variant="outline"
-          className="w-fit flex items-center space-x-1.5 text-xs text-destructive border-destructive/20 hover:bg-destructive/10 cursor-pointer"
-        >
-          <LogOut className="h-4 w-4" />
-          <span>Sign Out</span>
-        </Button>
-      </div>
-
-      {/* Action alerts */}
-      {msgText.text && (
-        <div
-          className={`p-3 border rounded-xl flex items-center space-x-2 text-xs font-semibold max-w-sm animate-in fade-in slide-in-from-top-4 duration-200 ${
-            msgText.type === "error"
-              ? "bg-destructive/10 border-destructive/20 text-destructive"
-              : "bg-emerald-500/10 border-emerald-500/20 text-emerald-500"
-          }`}
-        >
-          <CheckCircle className="h-4 w-4 shrink-0" />
-          <span>{msgText.text}</span>
-        </div>
-      )}
-
-      {/* Tabs panels */}
-      <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="bg-muted border border-border/60 p-1 rounded-xl flex flex-wrap h-auto gap-1">
-          <TabsTrigger value="overview" className="rounded-lg text-xs py-2 px-3.5 cursor-pointer">
-            Overview
-          </TabsTrigger>
-          <TabsTrigger value="projects" className="rounded-lg text-xs py-2 px-3.5 cursor-pointer">
-            Projects
-          </TabsTrigger>
-
-          <TabsTrigger value="messages" className="rounded-lg text-xs py-2 px-3.5 cursor-pointer">
-            Messages ({messages.length})
-          </TabsTrigger>
-          <TabsTrigger value="certificates" className="rounded-lg text-xs py-2 px-3.5 cursor-pointer">
-            Certificates
-          </TabsTrigger>
-          <TabsTrigger value="settings" className="rounded-lg text-xs py-2 px-3.5 cursor-pointer">
-            Settings
-          </TabsTrigger>
-        </TabsList>
-
-        {/* --- OVERVIEW TAB --- */}
-        <TabsContent value="overview" className="space-y-6 outline-none">
-          {/* Stats Tiles */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="bg-card border border-border p-5 rounded-2xl flex items-center space-x-4">
-              <div className="p-3 bg-indigo-500/10 text-indigo-500 border border-indigo-500/20 rounded-xl">
-                <Briefcase className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Total Projects</p>
-                <p className="text-xl font-extrabold text-foreground mt-0.5">{projects.length}</p>
-              </div>
-            </div>
-
-            <div className="bg-card border border-border p-5 rounded-2xl flex items-center space-x-4">
-              <div className="p-3 bg-amber-500/10 text-amber-500 border border-amber-500/20 rounded-xl">
-                <MessageSquare className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Contact Messages</p>
-                <p className="text-xl font-extrabold text-foreground mt-0.5">{messages.length}</p>
-              </div>
-            </div>
-
-            <div className="bg-card border border-border p-5 rounded-2xl flex items-center space-x-4">
-              <div className="p-3 bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 rounded-xl">
-                <Award className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Certifications</p>
-                <p className="text-xl font-extrabold text-foreground mt-0.5">{certificates.length}</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Recent Messages Preview */}
-          <div className="bg-card border border-border p-5 rounded-2xl">
-            <h2 className="text-sm font-bold text-foreground mb-4">Recent Contact Logs</h2>
-            {messages.length === 0 ? (
-              <p className="text-xs text-muted-foreground py-4 text-center">No messages received yet.</p>
+    <div className="flex h-screen bg-background text-foreground overflow-hidden font-sans select-text">
+      {/* Toast Notification */}
+      <AnimatePresence>
+        {msgText.text && (
+          <motion.div
+            initial={{ opacity: 0, y: -20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.95 }}
+            className={`fixed top-6 right-6 z-50 p-4 border rounded-xl flex items-center space-x-3 text-xs font-semibold shadow-lg max-w-sm ${
+              msgText.type === "error"
+                ? "bg-destructive/15 border-destructive/20 text-destructive backdrop-blur-md"
+                : "bg-emerald-500/15 border-emerald-500/20 text-emerald-500 backdrop-blur-md"
+            }`}
+          >
+            {msgText.type === "error" ? (
+              <AlertCircle className="h-5 w-5 shrink-0 text-destructive" />
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-xs text-left text-muted-foreground border-collapse">
-                  <thead>
-                    <tr className="border-b border-border/80 text-foreground font-semibold">
-                      <th className="py-2.5">Date</th>
-                      <th className="py-2.5">Sender</th>
-                      <th className="py-2.5">Subject</th>
-                      <th className="py-2.5">Message Snippet</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {messages.slice(0, 4).map((msg) => (
-                      <tr key={msg.id} className="border-b border-border/40 hover:bg-muted/10">
-                        <td className="py-2.5 font-mono">{new Date(msg.createdAt).toLocaleDateString()}</td>
-                        <td className="py-2.5 font-medium text-foreground">
-                          {msg.name} ({msg.email})
-                        </td>
-                        <td className="py-2.5 text-foreground">{msg.subject}</td>
-                        <td className="py-2.5 truncate max-w-xs">{msg.message}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <CheckCircle className="h-5 w-5 shrink-0 text-emerald-500" />
             )}
-          </div>
-        </TabsContent>
+            <span>{msgText.text}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-        {/* --- PROJECTS TAB --- */}
-        <TabsContent value="projects" className="space-y-4 outline-none">
-          <div className="flex items-center justify-between border-b border-border/40 pb-4">
-            <h2 className="text-sm font-bold text-foreground">Manage Portfolio Projects</h2>
-            <Button
-              onClick={() => {
-                setSelectedProject(null);
-                setProjectDialogOpen(true);
-              }}
-              size="sm"
-              className="flex items-center space-x-1 text-xs cursor-pointer"
+      {/* Desktop Sidebar */}
+      <aside className="hidden md:flex flex-col w-64 bg-card border-r border-border/80 h-full">
+        {/* Header */}
+        <div className="p-6 border-b border-border/60">
+          <div className="flex items-center space-x-2 text-primary font-semibold mb-1">
+            <Sparkles className="h-4.5 w-4.5" />
+            <span className="text-[10px] uppercase tracking-widest font-mono">Console Active</span>
+          </div>
+          <h2 className="text-lg font-bold tracking-tight text-foreground">Admin Portal</h2>
+        </div>
+
+        {/* Navigation */}
+        <nav className="flex-1 px-4 py-6 space-y-1">
+          {menuItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = activeTab === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => setActiveTab(item.id)}
+                className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-xs font-medium transition-all duration-200 cursor-pointer ${
+                  isActive
+                    ? "bg-primary text-primary-foreground shadow-sm shadow-primary/20"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                }`}
+              >
+                <div className="flex items-center space-x-3">
+                  <Icon className="h-4.5 w-4.5" />
+                  <span>{item.label}</span>
+                </div>
+                {"badge" in item && item.badge > 0 && (
+                  <span
+                    className={`px-1.5 py-0.5 rounded-full text-[9px] font-bold ${
+                      isActive
+                        ? "bg-primary-foreground text-primary"
+                        : "bg-primary/10 text-primary border border-primary/20"
+                    }`}
+                  >
+                    {item.badge}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </nav>
+
+        {/* Footer info & Logout */}
+        <div className="p-4 border-t border-border/60 bg-muted/20">
+          <div className="flex items-center space-x-3 mb-4 px-2">
+            <div className="w-8 h-8 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary font-bold text-xs uppercase">
+              A
+            </div>
+            <div className="truncate">
+              <p className="text-[11px] font-semibold text-foreground truncate">Seeded Admin</p>
+              <p className="text-[9px] text-muted-foreground truncate">admin@hassan.dev</p>
+            </div>
+          </div>
+          <Button
+            onClick={handleLogout}
+            variant="outline"
+            className="w-full flex items-center justify-center space-x-2 text-xs text-destructive border-destructive/20 hover:bg-destructive/10 cursor-pointer"
+          >
+            <LogOut className="h-4 w-4" />
+            <span>Sign Out</span>
+          </Button>
+        </div>
+      </aside>
+
+      {/* Mobile Drawer Sidebar Overlay */}
+      <AnimatePresence>
+        {sidebarOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.5 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSidebarOpen(false)}
+              className="fixed inset-0 z-40 bg-black md:hidden"
+            />
+            <motion.aside
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ type: "spring", bounce: 0, duration: 0.3 }}
+              className="fixed inset-y-0 left-0 z-50 w-64 bg-card border-r border-border flex flex-col md:hidden"
             >
-              <Plus className="h-3.5 w-3.5" />
-              <span>Add Project</span>
-            </Button>
-          </div>
-
-          {projects.length === 0 ? (
-            <p className="text-xs text-muted-foreground py-8 text-center bg-card border border-border rounded-xl">
-              No projects configured. Click "Add Project" to begin.
-            </p>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {projects.map((proj) => (
-                <div
-                  key={proj.id}
-                  className="bg-card border border-border p-5 rounded-2xl flex flex-col justify-between"
-                >
-                  <div>
-                    <div className="flex items-center justify-between">
-                      <h3 className="font-bold text-foreground text-sm">{proj.title}</h3>
-                      <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-secondary text-muted-foreground">
-                        Order: {proj.order}
-                      </span>
-                    </div>
-                    <p className="text-[11px] text-muted-foreground mt-1 font-mono">slug: {proj.slug}</p>
-                    <p className="text-xs text-muted-foreground mt-3 line-clamp-2">{proj.description}</p>
+              <div className="p-6 border-b border-border flex items-center justify-between">
+                <div>
+                  <div className="flex items-center space-x-2 text-primary font-semibold mb-1">
+                    <Sparkles className="h-4 w-4" />
+                    <span className="text-[9px] uppercase tracking-widest font-mono">Console</span>
                   </div>
+                  <h2 className="text-base font-bold tracking-tight text-foreground">Admin Portal</h2>
+                </div>
+                <button
+                  onClick={() => setSidebarOpen(false)}
+                  className="p-1 rounded-lg border border-border text-muted-foreground hover:text-foreground cursor-pointer"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
 
-                  <div className="flex items-center justify-between pt-4 mt-6 border-t border-border/50">
-                    <div className="flex space-x-1">
-                      {proj.githubUrl && <Github className="h-3.5 w-3.5 text-muted-foreground" />}
-                      {proj.liveUrl && <ExternalLink className="h-3.5 w-3.5 text-muted-foreground" />}
-                    </div>
+              <nav className="flex-grow px-4 py-6 space-y-1">
+                {menuItems.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = activeTab === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => {
+                        setActiveTab(item.id);
+                        setSidebarOpen(false);
+                      }}
+                      className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-xs font-medium transition-all duration-200 cursor-pointer border-0 ${
+                        isActive
+                          ? "bg-primary text-primary-foreground font-semibold shadow-sm"
+                          : "text-muted-foreground bg-transparent hover:bg-muted hover:text-foreground"
+                      }`}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <Icon className="h-4.5 w-4.5" />
+                        <span>{item.label}</span>
+                      </div>
+                      {"badge" in item && item.badge > 0 && (
+                        <span
+                          className={`px-1.5 py-0.5 rounded-full text-[9px] font-bold ${
+                            isActive
+                              ? "bg-primary-foreground text-primary"
+                              : "bg-primary/10 text-primary border border-primary/20"
+                          }`}
+                        >
+                          {item.badge}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </nav>
 
-                    <div className="flex space-x-2">
-                      <Button
-                        onClick={() => {
-                          setSelectedProject(proj);
-                          setProjectDialogOpen(true);
-                        }}
-                        variant="outline"
-                        size="sm"
-                        className="h-8 text-xs cursor-pointer"
-                      >
-                        <Edit2 className="h-3 w-3 mr-1" />
-                        <span>Edit</span>
-                      </Button>
-                      <Button
-                        onClick={() => handleDeleteProject(proj.id)}
-                        variant="outline"
-                        size="sm"
-                        className="h-8 text-xs text-destructive hover:bg-destructive/10 border-destructive/10 cursor-pointer"
-                      >
-                        <Trash2 className="h-3 w-3 mr-1" />
-                        <span>Delete</span>
-                      </Button>
-                    </div>
+              <div className="p-4 border-t border-border bg-muted/10">
+                <div className="flex items-center space-x-3 mb-4 px-2">
+                  <div className="w-8 h-8 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary font-bold text-xs uppercase">
+                    A
+                  </div>
+                  <div className="truncate">
+                    <p className="text-[11px] font-semibold text-foreground truncate">Seeded Admin</p>
+                    <p className="text-[9px] text-muted-foreground truncate">admin@hassan.dev</p>
                   </div>
                 </div>
-              ))}
+                <Button
+                  onClick={handleLogout}
+                  variant="outline"
+                  className="w-full flex items-center justify-center space-x-2 text-xs text-destructive border-destructive/20 hover:bg-destructive/10 cursor-pointer"
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span>Sign Out</span>
+                </Button>
+              </div>
+            </motion.aside>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Main Content Area */}
+      <div className="flex-grow flex flex-col h-full bg-background overflow-y-auto">
+        {/* Mobile Header */}
+        <header className="flex md:hidden items-center justify-between px-6 py-4 bg-card border-b border-border/80 sticky top-0 z-30">
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="p-2 -ml-2 rounded-lg border border-border/80 text-foreground cursor-pointer bg-card"
+            >
+              <Menu className="h-5 w-5" />
+            </button>
+            <h1 className="text-sm font-extrabold capitalize tracking-tight text-foreground">
+              {activeTab === "queries" ? "Contact Queries" : activeTab}
+            </h1>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Sparkles className="h-4 w-4 text-primary" />
+            <span className="text-[9px] font-bold uppercase tracking-wider font-mono text-muted-foreground">
+              Console
+            </span>
+          </div>
+        </header>
+
+        {/* Content Body */}
+        <main className="flex-1 p-6 md:p-8 max-w-6xl w-full mx-auto space-y-8 select-text">
+          {/* Top Bar for Desktop */}
+          <div className="hidden md:flex items-center justify-between border-b border-border/50 pb-6">
+            <div>
+              <div className="flex items-center space-x-2 text-muted-foreground text-xs font-mono">
+                <span>Console</span>
+                <ChevronRight className="h-3.5 w-3.5" />
+                <span className="capitalize text-primary font-semibold">
+                  {activeTab === "queries" ? "Contact Queries" : activeTab}
+                </span>
+              </div>
+              <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground mt-1.5 capitalize">
+                {activeTab === "queries" ? "Contact Queries & Feedback" : `${activeTab} Management`}
+              </h1>
             </div>
-          )}
-        </TabsContent>
+            <div className="text-xs text-muted-foreground bg-card border border-border p-2 rounded-xl flex items-center space-x-2 font-mono">
+              <Calendar className="h-4 w-4 text-primary" />
+              <span>{new Date().toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
+            </div>
+          </div>
 
+          {/* PAGE ROUTER */}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+            >
+              {/* --- DASHBOARD TAB --- */}
+              {activeTab === "dashboard" && (
+                <div className="space-y-8">
+                  {/* Stats Cards */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                    {/* Total Contacts */}
+                    <div className="bg-card border border-border p-6 rounded-2xl relative overflow-hidden group shadow-sm">
+                      <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-full -mr-8 -mt-8 transition-transform group-hover:scale-110" />
+                      <div className="flex items-center space-x-4">
+                        <div className="p-3.5 bg-primary/10 text-primary border border-primary/20 rounded-xl">
+                          <Mail className="h-6 w-6" />
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground font-semibold">Total Contacts</p>
+                          <p className="text-3xl font-extrabold text-foreground mt-1">
+                            {stats.total}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="mt-4 pt-4 border-t border-border/60 flex justify-between items-center text-[10px]">
+                        <span className="text-muted-foreground">All time contact requests</span>
+                        <button
+                          onClick={() => setActiveTab("queries")}
+                          className="text-primary hover:underline font-bold bg-transparent border-0 cursor-pointer"
+                        >
+                          View Queries &rarr;
+                        </button>
+                      </div>
+                    </div>
 
-
-        {/* --- MESSAGES TAB --- */}
-        <TabsContent value="messages" className="space-y-4 outline-none">
-          <h2 className="text-sm font-bold text-foreground border-b border-border/40 pb-4">
-            Contact Submissions
-          </h2>
-
-          {messages.length === 0 ? (
-            <p className="text-xs text-muted-foreground py-8 text-center bg-card border border-border rounded-xl">
-              No contact submissions found in database.
-            </p>
-          ) : (
-            <div className="space-y-4">
-              {messages.map((msg) => (
-                <div key={msg.id} className="bg-card border border-border p-5 rounded-2xl space-y-3">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 border-b border-border/40 pb-3">
-                    <div>
-                      <div className="flex items-center space-x-2">
-                        <p className="font-bold text-foreground text-xs">{msg.name}</p>
-                        <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/20 uppercase tracking-wider">
-                          {msg.status || "Pending"}
+                    {/* Pending Queries */}
+                    <div className="bg-card border border-border p-6 rounded-2xl relative overflow-hidden group shadow-sm">
+                      <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 rounded-full -mr-8 -mt-8 transition-transform group-hover:scale-110" />
+                      <div className="flex items-center space-x-4">
+                        <div className="p-3.5 bg-amber-500/10 text-amber-500 border border-amber-500/20 rounded-xl">
+                          <Clock className="h-6 w-6" />
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground font-semibold">Pending Queries</p>
+                          <p className="text-3xl font-extrabold text-foreground mt-1">
+                            {stats.pending}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="mt-4 pt-4 border-t border-border/60 flex justify-between items-center text-[10px]">
+                        <span className="text-muted-foreground">Awaiting admin review</span>
+                        <span className="bg-amber-500/15 text-amber-500 border border-amber-500/20 px-2 py-0.5 rounded-full font-bold uppercase">
+                          Action Required
                         </span>
                       </div>
-                      <p className="text-[10px] text-muted-foreground font-mono mt-0.5">
-                        {msg.email} {msg.phone ? `| Tel: ${msg.phone}` : ""}
+                    </div>
+
+                    {/* Resolved/Completed Queries */}
+                    <div className="bg-card border border-border p-6 rounded-2xl relative overflow-hidden group shadow-sm">
+                      <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full -mr-8 -mt-8 transition-transform group-hover:scale-110" />
+                      <div className="flex items-center space-x-4">
+                        <div className="p-3.5 bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 rounded-xl">
+                          <CheckCircle className="h-6 w-6" />
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground font-semibold">Resolved Queries</p>
+                          <p className="text-3xl font-extrabold text-foreground mt-1">
+                            {stats.resolved}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="mt-4 pt-4 border-t border-border/60 flex justify-between items-center text-[10px]">
+                        <span className="text-muted-foreground">Completed or resolved logs</span>
+                        <span className="text-emerald-500 font-bold">
+                          {stats.total > 0
+                            ? `${Math.round((stats.resolved / stats.total) * 100)}% Done`
+                            : "0% Done"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Quick System Info Alert */}
+                  <div className="bg-card border border-border p-5 rounded-2xl flex items-start space-x-4 shadow-sm">
+                    <div className="p-2 bg-primary/10 rounded-lg text-primary shrink-0">
+                      <Info className="h-5 w-5" />
+                    </div>
+                    <div className="space-y-1">
+                      <h4 className="text-xs font-bold text-foreground">Database Sync Status</h4>
+                      <p className="text-[11px] text-muted-foreground leading-relaxed">
+                        Currently using <strong>Supabase PostgreSQL</strong> for database persistence. 
+                        Supabase JWT user profile roles are cross-referenced with local profiles table records 
+                        for security.
                       </p>
                     </div>
-                    <div className="flex items-center space-x-3 shrink-0">
-                      <span className="text-[10px] font-mono text-muted-foreground">
-                        {new Date(msg.createdAt).toLocaleString()}
-                      </span>
-                      <Button
-                        onClick={() => handleDeleteMessage(msg.id)}
-                        variant="outline"
-                        size="sm"
-                        className="h-7 text-[10px] text-destructive hover:bg-destructive/10 border-destructive/10 cursor-pointer"
+                  </div>
+
+                  {/* Recent Activity / Contacts Preview */}
+                  <div className="bg-card border border-border p-6 rounded-2xl shadow-sm">
+                    <div className="flex items-center justify-between border-b border-border/60 pb-4 mb-4">
+                      <h3 className="text-sm font-bold text-foreground">Recent Contact Activity</h3>
+                      <button
+                        onClick={() => setActiveTab("queries")}
+                        className="text-xs text-primary hover:underline font-bold bg-transparent border-0 cursor-pointer"
                       >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
+                        Manage All
+                      </button>
+                    </div>
+
+                    {stats.recent.length === 0 ? (
+                      <p className="text-xs text-muted-foreground py-6 text-center">
+                        No messages received yet.
+                      </p>
+                    ) : (
+                      <div className="divide-y divide-border/40">
+                        {stats.recent.map((msg) => {
+                          const statusVal = msg.status || "Pending";
+                          return (
+                            <div key={msg.id} className="py-4 first:pt-0 last:pb-0 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                              <div className="space-y-1">
+                                <div className="flex items-center space-x-2">
+                                  <span className="text-xs font-bold text-foreground">
+                                    {msg.name}
+                                  </span>
+                                  <span className="text-[10px] text-muted-foreground">&bull;</span>
+                                  <span className="text-[10px] text-muted-foreground truncate max-w-[150px] sm:max-w-none">
+                                    {msg.email}
+                                  </span>
+                                  <span className="text-[10px] text-muted-foreground">&bull;</span>
+                                  <span className="text-[10px] font-mono text-muted-foreground shrink-0">
+                                    {new Date(msg.createdAt).toLocaleDateString()}
+                                  </span>
+                                </div>
+                                <p className="text-[11px] text-foreground font-semibold">
+                                  Subject: <span className="text-muted-foreground font-medium">{msg.subject}</span>
+                                </p>
+                                <p className="text-xs text-muted-foreground line-clamp-1">
+                                  {msg.message}
+                                </p>
+                              </div>
+
+                              <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0">
+                                <span
+                                  className={`text-[9px] font-bold px-2 py-0.5 rounded-full border uppercase tracking-wider ${
+                                    statusVal === "Pending"
+                                      ? "bg-amber-500/10 border-amber-500/25 text-amber-500"
+                                      : statusVal === "Done"
+                                      ? "bg-indigo-500/10 border-indigo-500/25 text-indigo-500"
+                                      : statusVal === "Completed"
+                                      ? "bg-emerald-500/10 border-emerald-500/25 text-emerald-500"
+                                      : "bg-teal-500/10 border-teal-500/25 text-teal-500"
+                                  }`}
+                                >
+                                  {statusVal}
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* --- CONTACT QUERIES TAB --- */}
+              {activeTab === "queries" && (
+                <div className="space-y-6">
+                  {/* Search, Filter & Controls */}
+                  <div className="bg-card border border-border p-5 rounded-2xl shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    {/* Search bar */}
+                    <div className="relative flex-1">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        type="text"
+                        placeholder="Search queries by name, email, subject, keyword..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="pl-9 bg-background border-border text-xs w-full py-5 rounded-xl"
+                      />
+                      {searchQuery && (
+                        <button
+                          onClick={() => setSearchQuery("")}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground hover:text-foreground bg-transparent border-0 cursor-pointer"
+                        >
+                          Clear
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Filter tabs/buttons */}
+                    <div className="flex items-center space-x-2 shrink-0 overflow-x-auto scrollbar-none py-1">
+                      <Filter className="h-4 w-4 text-muted-foreground mr-1" />
+                      {["All", "Pending", "Done", "Completed", "Resolved"].map((status) => (
+                        <button
+                          key={status}
+                          onClick={() => setStatusFilter(status)}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${
+                            statusFilter === status
+                              ? "bg-primary border-primary text-primary-foreground shadow-sm"
+                              : "bg-background border-border text-muted-foreground hover:bg-muted hover:text-foreground"
+                          }`}
+                        >
+                          {status}
+                        </button>
+                      ))}
                     </div>
                   </div>
-                  <div>
-                    <p className="text-xs font-bold text-foreground mb-1">Subject: {msg.subject}</p>
-                    <p className="text-xs text-muted-foreground whitespace-pre-wrap leading-relaxed">
-                      {msg.message}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </TabsContent>
 
-        {/* --- CERTIFICATES TAB --- */}
-        <TabsContent value="certificates" className="space-y-4 outline-none">
-          <div className="flex items-center justify-between border-b border-border/40 pb-4">
-            <h2 className="text-sm font-bold text-foreground">Manage Certifications</h2>
-            <Button onClick={() => setCertDialogOpen(true)} size="sm" className="flex items-center space-x-1 text-xs cursor-pointer">
-              <Plus className="h-3.5 w-3.5" />
-              <span>Add Certificate</span>
-            </Button>
-          </div>
-
-          {certificates.length === 0 ? (
-            <p className="text-xs text-muted-foreground py-8 text-center bg-card border border-border rounded-xl">
-              No certifications configured. Click "Add Certificate" to begin.
-            </p>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {certificates.map((cert) => (
-                <div
-                  key={cert.id}
-                  className="bg-card border border-border p-4 rounded-xl flex items-center justify-between"
-                >
-                  <div>
-                    <h3 className="font-bold text-foreground text-xs">{cert.title}</h3>
-                    <p className="text-[10px] text-muted-foreground font-mono mt-1">
-                      {cert.issuer} &bull; {cert.issueDate}
+                  {/* Queries count */}
+                  <div className="flex items-center justify-between px-2">
+                    <p className="text-xs text-muted-foreground font-semibold">
+                      Showing {filteredMessages.length} of {messages.length} queries
                     </p>
                   </div>
 
-                  <Button
-                    onClick={() => handleDeleteCert(cert.id)}
-                    variant="outline"
-                    size="sm"
-                    className="h-8 text-xs text-destructive hover:bg-destructive/10 border-destructive/10 cursor-pointer"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </Button>
+                  {/* Queries list */}
+                  {filteredMessages.length === 0 ? (
+                    <div className="bg-card border border-border p-12 rounded-2xl text-center shadow-sm">
+                      <Mail className="h-10 w-10 text-muted-foreground/40 mx-auto mb-3" />
+                      <h4 className="font-bold text-foreground text-sm">No queries found</h4>
+                      <p className="text-xs text-muted-foreground mt-1 max-w-xs mx-auto">
+                        No contact submissions matched your active filters or search terms.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {filteredMessages.map((msg) => {
+                        const statusVal = msg.status || "Pending";
+                        return (
+                          <div
+                            key={msg.id}
+                            className="bg-card border border-border p-5 sm:p-6 rounded-2xl shadow-sm space-y-4 transition-all hover:border-border/100"
+                          >
+                            {/* Card Header */}
+                            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 border-b border-border/50 pb-4">
+                              <div className="space-y-1">
+                                <div className="flex items-center space-x-2.5">
+                                  <User className="h-4.5 w-4.5 text-primary shrink-0" />
+                                  <h4 className="font-bold text-foreground text-sm leading-none">
+                                    {msg.name}
+                                  </h4>
+                                  <span
+                                    className={`text-[9px] font-bold px-2 py-0.5 rounded-full border uppercase tracking-wider ${
+                                      statusVal === "Pending"
+                                        ? "bg-amber-500/10 border-amber-500/25 text-amber-500"
+                                        : statusVal === "Done"
+                                        ? "bg-indigo-500/10 border-indigo-500/25 text-indigo-500"
+                                        : statusVal === "Completed"
+                                        ? "bg-emerald-500/10 border-emerald-500/25 text-emerald-500"
+                                        : "bg-teal-500/10 border-teal-500/25 text-teal-500"
+                                    }`}
+                                  >
+                                    {statusVal}
+                                  </span>
+                                </div>
+                                <div className="text-[11px] text-muted-foreground flex flex-wrap gap-x-3 gap-y-1 font-mono">
+                                  <span>Email: {msg.email}</span>
+                                  {msg.phone && <span>Phone: {msg.phone}</span>}
+                                </div>
+                              </div>
+
+                              <div className="flex items-center space-x-2 shrink-0">
+                                <span className="text-[10px] font-mono text-muted-foreground flex items-center">
+                                  <Calendar className="h-3.5 w-3.5 mr-1 text-muted-foreground/80" />
+                                  {new Date(msg.createdAt).toLocaleString()}
+                                </span>
+                                <Button
+                                  onClick={() => handleDeleteMessage(msg.id)}
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-8 w-8 p-0 text-destructive hover:bg-destructive/10 border-destructive/10 cursor-pointer"
+                                  title="Delete query log"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </div>
+
+                            {/* Card Content */}
+                            <div className="space-y-2">
+                              <p className="text-xs font-bold text-foreground">
+                                Subject: <span className="font-semibold text-foreground/80">{msg.subject}</span>
+                              </p>
+                              <div className="bg-muted/30 border border-border/40 p-4 rounded-xl">
+                                <p className="text-xs text-muted-foreground whitespace-pre-wrap leading-relaxed">
+                                  {msg.message}
+                                </p>
+                              </div>
+                            </div>
+
+                            {/* Card Actions: Status Update Flow */}
+                            <div className="pt-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs">
+                              <span className="text-muted-foreground font-semibold flex items-center">
+                                <CheckSquare className="h-4 w-4 mr-1 text-primary" />
+                                Change Status Flow:
+                              </span>
+                              <div className="flex flex-wrap gap-1.5">
+                                {(["Pending", "Done", "Completed", "Resolved"] as const).map((s) => (
+                                  <button
+                                    key={s}
+                                    onClick={() => handleUpdateStatus(msg.id, s)}
+                                    className={`px-3 py-1.5 text-[10px] rounded-lg font-bold border transition-all cursor-pointer ${
+                                      statusVal === s
+                                        ? "bg-primary border-primary text-primary-foreground shadow-sm"
+                                        : "bg-background border-border text-muted-foreground hover:bg-muted hover:text-foreground"
+                                    }`}
+                                  >
+                                    {s}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
-              ))}
-            </div>
-          )}
-        </TabsContent>
+              )}
 
-        {/* --- SETTINGS TAB --- */}
-        <TabsContent value="settings" className="space-y-4 outline-none">
-          <h2 className="text-sm font-bold text-foreground border-b border-border/40 pb-4">
-            Console Settings
-          </h2>
+              {/* --- PROJECTS TAB --- */}
+              {activeTab === "projects" && (
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between border-b border-border/40 pb-4">
+                    <h2 className="text-sm font-bold text-foreground">Manage Portfolio Projects</h2>
+                    <Button
+                      onClick={() => {
+                        setSelectedProject(null);
+                        setProjectDialogOpen(true);
+                      }}
+                      size="sm"
+                      className="flex items-center space-x-1.5 text-xs cursor-pointer"
+                    >
+                      <Plus className="h-4 w-4" />
+                      <span>Add Project</span>
+                    </Button>
+                  </div>
 
-          <div className="bg-card border border-border p-6 rounded-2xl max-w-md">
-            <form onSubmit={handleUpdateResume} className="space-y-4">
-              <div className="space-y-1.5">
-                <label htmlFor="resumeUrl" className="text-xs font-semibold text-muted-foreground">
-                  Resume PDF Link
-                </label>
-                <Input
-                  id="resumeUrl"
-                  name="resumeUrl"
-                  type="text"
-                  placeholder="https://example.com/resume.pdf"
-                  required
-                  defaultValue={resumeUrl}
-                  className="bg-background border-border"
-                />
-                <p className="text-[10px] text-muted-foreground">
-                  Configure the destination path for download button on your Resume page.
-                </p>
-              </div>
+                  {projects.length === 0 ? (
+                    <p className="text-xs text-muted-foreground py-8 text-center bg-card border border-border rounded-xl">
+                      No projects configured. Click "Add Project" to begin.
+                    </p>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {projects.map((proj) => (
+                        <div
+                          key={proj.id}
+                          className="bg-card border border-border p-6 rounded-2xl flex flex-col justify-between shadow-sm"
+                        >
+                          <div>
+                            <div className="flex items-center justify-between">
+                              <h3 className="font-bold text-foreground text-sm">{proj.title}</h3>
+                              <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-secondary text-muted-foreground">
+                                Order: {proj.order}
+                              </span>
+                            </div>
+                            <p className="text-[11px] text-muted-foreground mt-1 font-mono">
+                              slug: {proj.slug}
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-3 line-clamp-2 leading-relaxed">
+                              {proj.description}
+                            </p>
+                          </div>
 
-              <Button type="submit" disabled={loading} className="text-xs font-semibold cursor-pointer">
-                Save Settings
-              </Button>
-            </form>
-          </div>
-        </TabsContent>
-      </Tabs>
+                          <div className="flex items-center justify-between pt-4 mt-6 border-t border-border/50">
+                            <div className="flex space-x-2">
+                              {proj.githubUrl && (
+                                <a
+                                  href={proj.githubUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="p-1.5 border border-border rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted"
+                                >
+                                  <Github className="h-4 w-4" />
+                                </a>
+                              )}
+                              {proj.liveUrl && (
+                                <a
+                                  href={proj.liveUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="p-1.5 border border-border rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted"
+                                >
+                                  <ExternalLink className="h-4 w-4" />
+                                </a>
+                              )}
+                            </div>
+
+                            <div className="flex space-x-2">
+                              <Button
+                                onClick={() => {
+                                  setSelectedProject(proj);
+                                  setProjectDialogOpen(true);
+                                }}
+                                variant="outline"
+                                size="sm"
+                                className="h-8 text-xs cursor-pointer"
+                              >
+                                <Edit2 className="h-3.5 w-3.5 mr-1" />
+                                <span>Edit</span>
+                              </Button>
+                              <Button
+                                onClick={() => handleDeleteProject(proj.id)}
+                                variant="outline"
+                                size="sm"
+                                className="h-8 text-xs text-destructive hover:bg-destructive/10 border-destructive/10 cursor-pointer"
+                              >
+                                <Trash2 className="h-3.5 w-3.5 mr-1" />
+                                <span>Delete</span>
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* --- CERTIFICATES TAB --- */}
+              {activeTab === "certificates" && (
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between border-b border-border/40 pb-4">
+                    <h2 className="text-sm font-bold text-foreground">Manage Certifications</h2>
+                    <Button
+                      onClick={() => setCertDialogOpen(true)}
+                      size="sm"
+                      className="flex items-center space-x-1.5 text-xs cursor-pointer"
+                    >
+                      <Plus className="h-4 w-4" />
+                      <span>Add Certificate</span>
+                    </Button>
+                  </div>
+
+                  {certificates.length === 0 ? (
+                    <p className="text-xs text-muted-foreground py-8 text-center bg-card border border-border rounded-xl">
+                      No certifications configured. Click "Add Certificate" to begin.
+                    </p>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                      {certificates.map((cert) => (
+                        <div
+                          key={cert.id}
+                          className="bg-card border border-border p-5 rounded-2xl flex items-center justify-between shadow-sm"
+                        >
+                          <div>
+                            <h3 className="font-bold text-foreground text-xs">{cert.title}</h3>
+                            <p className="text-[10px] text-muted-foreground font-mono mt-1 leading-relaxed">
+                              {cert.issuer} &bull; {cert.issueDate}
+                            </p>
+                            {cert.credentialUrl && (
+                              <a
+                                href={cert.credentialUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-[10px] text-primary hover:underline font-semibold mt-2 inline-flex items-center"
+                              >
+                                Verify Credential <ExternalLink className="h-3 w-3 ml-1" />
+                              </a>
+                            )}
+                          </div>
+
+                          <Button
+                            onClick={() => handleDeleteCert(cert.id)}
+                            variant="outline"
+                            size="sm"
+                            className="h-8 w-8 p-0 text-destructive hover:bg-destructive/10 border-destructive/10 cursor-pointer shrink-0"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* --- SETTINGS TAB --- */}
+              {activeTab === "settings" && (
+                <div className="space-y-6">
+                  <h2 className="text-sm font-bold text-foreground border-b border-border/40 pb-4">
+                    Console Settings
+                  </h2>
+
+                  <div className="bg-card border border-border p-6 rounded-2xl max-w-md shadow-sm">
+                    <form key={resumeUrl} onSubmit={handleUpdateResume} className="space-y-4">
+                      <div className="space-y-2">
+                        <label htmlFor="resumeUrl" className="text-xs font-semibold text-muted-foreground">
+                          Resume PDF Reference Link
+                        </label>
+                        <Input
+                          id="resumeUrl"
+                          name="resumeUrl"
+                          type="text"
+                          placeholder="https://example.com/resume.pdf"
+                          required
+                          defaultValue={resumeUrl}
+                          className="bg-background border-border text-xs py-5 rounded-xl"
+                        />
+                        <p className="text-[10px] text-muted-foreground leading-relaxed">
+                          Configure the destination link for the download/view button on your public Resume page.
+                        </p>
+                      </div>
+
+                      <Button type="submit" disabled={loading} className="text-xs font-semibold cursor-pointer py-5 px-5 rounded-xl">
+                        {loading ? "Saving Settings..." : "Save Settings"}
+                      </Button>
+                    </form>
+                  </div>
+                </div>
+              )}
+            </motion.div>
+          </AnimatePresence>
+        </main>
+      </div>
 
       {/* --- ADD/EDIT PROJECT DIALOG --- */}
       <Dialog open={projectDialogOpen} onOpenChange={setProjectDialogOpen}>
-        <DialogContent className="max-w-lg bg-card border-border select-text overflow-y-auto max-h-[85vh]">
+        <DialogContent className="max-w-lg bg-card border-border select-text overflow-y-auto max-h-[85vh] rounded-3xl">
           <DialogHeader>
             <DialogTitle>{selectedProject ? "Edit Project" : "Add Project"}</DialogTitle>
             <DialogDescription>
@@ -599,7 +1108,12 @@ export default function AdminConsole({
             </DialogDescription>
           </DialogHeader>
 
-          <form ref={projectFormRef} onSubmit={handleSaveProject} className="space-y-4 py-4 text-xs">
+          <form
+            key={selectedProject ? selectedProject.id : "new-project"}
+            ref={projectFormRef}
+            onSubmit={handleSaveProject}
+            className="space-y-4 py-4 text-xs"
+          >
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
                 <label className="font-semibold text-muted-foreground">Project Title</label>
@@ -716,7 +1230,7 @@ export default function AdminConsole({
               />
             </div>
 
-            <DialogFooter className="pt-4">
+            <DialogFooter className="pt-4 gap-2">
               <Button
                 type="button"
                 variant="outline"
@@ -733,11 +1247,9 @@ export default function AdminConsole({
         </DialogContent>
       </Dialog>
 
-
-
       {/* --- ADD CERTIFICATE DIALOG --- */}
       <Dialog open={certDialogOpen} onOpenChange={setCertDialogOpen}>
-        <DialogContent className="max-w-sm bg-card border-border select-text">
+        <DialogContent className="max-w-sm bg-card border-border select-text rounded-3xl">
           <DialogHeader>
             <DialogTitle>Add Certificate</DialogTitle>
             <DialogDescription>Input credentials of certification earned.</DialogDescription>
@@ -778,7 +1290,7 @@ export default function AdminConsole({
               />
             </div>
 
-            <DialogFooter className="pt-4">
+            <DialogFooter className="pt-4 gap-2">
               <Button
                 type="button"
                 variant="outline"

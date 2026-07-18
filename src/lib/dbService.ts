@@ -246,7 +246,7 @@ let mockCertificates: CertificateData[] = [
 ];
 
 let mockMessages: MessageData[] = [];
-let mockResumeUrl = "/resume.pdf";
+let mockResumeUrl = "/HASSAN_RESUME.pdf";
 
 // DB Query Helper Functions
 export const dbService = {
@@ -265,14 +265,118 @@ export const dbService = {
 
   // Projects
   async getProjects(): Promise<ProjectData[]> {
+    const isAvail = await this.isDbAvailable();
+    if (isAvail) {
+      try {
+        let count = await prisma.project.count();
+        if (count === 0) {
+          await Promise.all(
+            mockProjects.map((p) =>
+              prisma.project.create({
+                data: {
+                  id: p.id,
+                  title: p.title,
+                  slug: p.slug,
+                  description: p.description,
+                  content: p.content,
+                  imageUrl: p.imageUrl,
+                  tags: p.tags,
+                  features: p.features,
+                  githubUrl: p.githubUrl,
+                  liveUrl: p.liveUrl,
+                  order: p.order,
+                },
+              })
+            )
+          );
+        }
+        const dbProjects = await prisma.project.findMany({
+          orderBy: { order: "asc" },
+        });
+        return dbProjects.map((p) => ({
+          id: p.id,
+          title: p.title,
+          slug: p.slug,
+          description: p.description,
+          content: p.content,
+          imageUrl: p.imageUrl,
+          tags: p.tags,
+          features: p.features,
+          githubUrl: p.githubUrl,
+          liveUrl: p.liveUrl,
+          order: p.order,
+        }));
+      } catch (e) {
+        console.error("Prisma error in getProjects:", e);
+      }
+    }
     return mockProjects.sort((a, b) => a.order - b.order);
   },
 
   async getProjectBySlug(slug: string): Promise<ProjectData | null> {
+    const isAvail = await this.isDbAvailable();
+    if (isAvail) {
+      try {
+        const p = await prisma.project.findUnique({
+          where: { slug },
+        });
+        if (p) {
+          return {
+            id: p.id,
+            title: p.title,
+            slug: p.slug,
+            description: p.description,
+            content: p.content,
+            imageUrl: p.imageUrl,
+            tags: p.tags,
+            features: p.features,
+            githubUrl: p.githubUrl,
+            liveUrl: p.liveUrl,
+            order: p.order,
+          };
+        }
+      } catch (e) {
+        console.error("Prisma error in getProjectBySlug:", e);
+      }
+    }
     return mockProjects.find((p) => p.slug === slug) || null;
   },
 
   async createProject(data: Omit<ProjectData, "id">): Promise<ProjectData> {
+    const isAvail = await this.isDbAvailable();
+    if (isAvail) {
+      try {
+        const p = await prisma.project.create({
+          data: {
+            title: data.title,
+            slug: data.slug,
+            description: data.description,
+            content: data.content,
+            imageUrl: data.imageUrl,
+            tags: data.tags,
+            features: data.features,
+            githubUrl: data.githubUrl,
+            liveUrl: data.liveUrl,
+            order: data.order,
+          },
+        });
+        return {
+          id: p.id,
+          title: p.title,
+          slug: p.slug,
+          description: p.description,
+          content: p.content,
+          imageUrl: p.imageUrl,
+          tags: p.tags,
+          features: p.features,
+          githubUrl: p.githubUrl,
+          liveUrl: p.liveUrl,
+          order: p.order,
+        };
+      } catch (e) {
+        console.error("Prisma error in createProject:", e);
+      }
+    }
     const newProj: ProjectData = {
       ...data,
       id: `proj-${Date.now()}`,
@@ -282,6 +386,41 @@ export const dbService = {
   },
 
   async updateProject(id: string, data: Partial<Omit<ProjectData, "id">>): Promise<ProjectData | null> {
+    const isAvail = await this.isDbAvailable();
+    if (isAvail) {
+      try {
+        const p = await prisma.project.update({
+          where: { id },
+          data: {
+            title: data.title,
+            slug: data.slug,
+            description: data.description,
+            content: data.content,
+            imageUrl: data.imageUrl,
+            tags: data.tags,
+            features: data.features,
+            githubUrl: data.githubUrl,
+            liveUrl: data.liveUrl,
+            order: data.order,
+          },
+        });
+        return {
+          id: p.id,
+          title: p.title,
+          slug: p.slug,
+          description: p.description,
+          content: p.content,
+          imageUrl: p.imageUrl,
+          tags: p.tags,
+          features: p.features,
+          githubUrl: p.githubUrl,
+          liveUrl: p.liveUrl,
+          order: p.order,
+        };
+      } catch (e) {
+        console.error("Prisma error in updateProject:", e);
+      }
+    }
     const idx = mockProjects.findIndex((p) => p.id === id);
     if (idx === -1) return null;
     mockProjects[idx] = { ...mockProjects[idx], ...data } as ProjectData;
@@ -289,6 +428,17 @@ export const dbService = {
   },
 
   async deleteProject(id: string): Promise<boolean> {
+    const isAvail = await this.isDbAvailable();
+    if (isAvail) {
+      try {
+        await prisma.project.delete({
+          where: { id },
+        });
+        return true;
+      } catch (e) {
+        console.error("Prisma error in deleteProject:", e);
+      }
+    }
     const idx = mockProjects.findIndex((p) => p.id === id);
     if (idx === -1) return false;
     mockProjects.splice(idx, 1);
@@ -307,10 +457,73 @@ export const dbService = {
 
   // Certificates
   async getCertificates(): Promise<CertificateData[]> {
+    const isAvail = await this.isDbAvailable();
+    if (isAvail) {
+      try {
+        let count = await prisma.certificate.count();
+        if (count === 0) {
+          await Promise.all(
+            mockCertificates.map((c) =>
+              prisma.certificate.create({
+                data: {
+                  id: c.id,
+                  title: c.title,
+                  issuer: c.issuer,
+                  issueDate: c.issueDate,
+                  credentialUrl: c.credentialUrl,
+                  imageUrl: c.imageUrl,
+                  order: c.order,
+                },
+              })
+            )
+          );
+        }
+        const dbCertificates = await prisma.certificate.findMany({
+          orderBy: { order: "asc" },
+        });
+        return dbCertificates.map((c) => ({
+          id: c.id,
+          title: c.title,
+          issuer: c.issuer,
+          issueDate: c.issueDate,
+          credentialUrl: c.credentialUrl,
+          imageUrl: c.imageUrl,
+          order: c.order,
+        }));
+      } catch (e) {
+        console.error("Prisma error in getCertificates:", e);
+      }
+    }
     return mockCertificates.sort((a, b) => a.order - b.order);
   },
 
   async createCertificate(data: Omit<CertificateData, "id">): Promise<CertificateData> {
+    const isAvail = await this.isDbAvailable();
+    if (isAvail) {
+      try {
+        const c = await prisma.certificate.create({
+          data: {
+            title: data.title,
+            issuer: data.issuer,
+            issueDate: data.issueDate,
+            credentialUrl: data.credentialUrl,
+            imageUrl: data.imageUrl,
+            order: data.order,
+          },
+        });
+        return {
+          id: c.id,
+          title: c.title,
+          issuer: c.issuer,
+          issueDate: c.issueDate,
+          credentialUrl: c.credentialUrl,
+          imageUrl: c.imageUrl,
+          order: c.order,
+        };
+      } catch (e) {
+        console.error("Prisma error in createCertificate:", e);
+      }
+    }
     const newCert: CertificateData = {
       ...data,
       id: `cert-${Date.now()}`,
@@ -320,6 +533,17 @@ export const dbService = {
   },
 
   async deleteCertificate(id: string): Promise<boolean> {
+    const isAvail = await this.isDbAvailable();
+    if (isAvail) {
+      try {
+        await prisma.certificate.delete({
+          where: { id },
+        });
+        return true;
+      } catch (e) {
+        console.error("Prisma error in deleteCertificate:", e);
+      }
+    }
     const idx = mockCertificates.findIndex((c) => c.id === id);
     if (idx === -1) return false;
     mockCertificates.splice(idx, 1);
@@ -407,12 +631,76 @@ export const dbService = {
     return true;
   },
 
+  async updateMessageStatus(id: string, status: string): Promise<MessageData | null> {
+    const isAvail = await this.isDbAvailable();
+    if (isAvail) {
+      try {
+        const updated = await prisma.contact.update({
+          where: { id },
+          data: { status },
+        });
+        return {
+          id: updated.id,
+          name: updated.name,
+          email: updated.email,
+          phone: updated.phone,
+          subject: updated.subject,
+          message: updated.message,
+          status: updated.status,
+          createdAt: updated.createdAt.toISOString(),
+          updatedAt: updated.updatedAt.toISOString(),
+        };
+      } catch (e) {
+        console.error("Prisma error in updateMessageStatus:", e);
+      }
+    }
+    const idx = mockMessages.findIndex((m) => m.id === id);
+    if (idx !== -1) {
+      mockMessages[idx].status = status;
+      return mockMessages[idx];
+    }
+    return null;
+  },
+
   // Resume URL
   async getResumeUrl(): Promise<string> {
+    const isAvail = await this.isDbAvailable();
+    if (isAvail) {
+      try {
+        const setting = await prisma.setting.findUnique({
+          where: { key: "resumeUrl" },
+        });
+        if (setting) {
+          return setting.value;
+        } else {
+          await prisma.setting.create({
+            data: {
+              key: "resumeUrl",
+              value: mockResumeUrl,
+            },
+          });
+        }
+      } catch (e) {
+        console.error("Prisma error in getResumeUrl:", e);
+      }
+    }
     return mockResumeUrl;
   },
 
   async updateResumeUrl(url: string): Promise<string> {
+    const isAvail = await this.isDbAvailable();
+    if (isAvail) {
+      try {
+        const setting = await prisma.setting.upsert({
+          where: { key: "resumeUrl" },
+          update: { value: url },
+          create: { key: "resumeUrl", value: url },
+        });
+        return setting.value;
+      } catch (e) {
+        console.error("Prisma error in updateResumeUrl:", e);
+      }
+    }
     mockResumeUrl = url;
     return mockResumeUrl;
   },

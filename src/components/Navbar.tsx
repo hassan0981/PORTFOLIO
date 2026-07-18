@@ -24,6 +24,7 @@ export default function Navbar() {
   const [scrolled, setScrolled] = React.useState(false);
   const [activeSection, setActiveSection] = React.useState<string>("about");
 
+
   React.useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 16);
     window.addEventListener("scroll", handleScroll, { passive: true });
@@ -84,6 +85,8 @@ export default function Navbar() {
     window.history.replaceState(null, "", `#${id}`);
     setActiveSection(id);
   };
+
+  if (pathname?.startsWith("/admin")) return null;
 
   return (
     <header

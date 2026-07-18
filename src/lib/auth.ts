@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import { isSupabaseConfigured, supabase } from "./supabase";
+import { prisma } from "./prisma";
 
 const COOKIE_NAME = "portfolio_auth_token";
 const FALLBACK_ADMIN_EMAIL = "admin@hassan.dev";
@@ -18,7 +19,16 @@ export async function loginUser(email: string, password: string): Promise<boolea
         console.error("Supabase signin error:", error.message);
         return false;
       }
-      if (data.session) {
+      if (data.session && data.user) {
+        // Query database to ensure user profile exists and has Admin role
+        const profile = await prisma.profile.findUnique({
+          where: { id: data.user.id }
+        });
+        if (!profile || profile.role !== "Admin") {
+          console.error("User does not have Admin role or profile not found in database.");
+          return false;
+        }
+
         // Set the token cookie
         cookieStore.set(COOKIE_NAME, data.session.access_token, {
           httpOnly: true,
@@ -76,6 +86,15 @@ export async function checkAuth(): Promise<boolean> {
       if (error || !data.user) {
         return false;
       }
+
+      const profile = await prisma.profile.findUnique({
+        where: { id: data.user.id }
+      });
+      if (!profile || profile.role !== "Admin") {
+        console.warn(`User ${data.user.email} not found in profiles or not Admin.`);
+        return false;
+      }
+
       return true;
     } catch (e) {
       console.error("Error checking Supabase auth:", e);
@@ -86,3 +105,4 @@ export async function checkAuth(): Promise<boolean> {
     return token === "mock_session_active_hassan_javed";
   }
 }
+

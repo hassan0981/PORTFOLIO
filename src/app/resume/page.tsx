@@ -6,12 +6,13 @@ import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { SlideUp } from "@/components/Animated";
 
-export const revalidate = 3600;
+export const revalidate = 0;
 
 export default async function ResumePage() {
   const resumeUrl = await dbService.getResumeUrl();
   const experiences = await dbService.getExperiences();
   const education = await dbService.getEducation();
+  const certificates = await dbService.getCertificates();
 
   return (
     <div className="section-shell">
@@ -154,6 +155,35 @@ export default async function ResumePage() {
                 ))}
               </div>
             </div>
+
+            {certificates.length > 0 && (
+              <div className="space-y-5">
+                <h2 className="font-mono text-[10px] tracking-[0.2em] uppercase text-primary">
+                  Certifications
+                </h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
+                  {certificates.map((cert) => (
+                    <div key={cert.id} className="space-y-1">
+                      <div className="flex justify-between items-baseline gap-1">
+                        <p className="text-sm font-medium text-foreground">{cert.title}</p>
+                        <span className="text-xs font-mono text-muted-foreground shrink-0">{cert.issueDate}</span>
+                      </div>
+                      <p className="text-xs font-mono text-primary">{cert.issuer}</p>
+                      {cert.credentialUrl && (
+                        <a
+                          href={cert.credentialUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[10px] text-muted-foreground hover:text-primary transition-colors inline-flex items-center font-mono mt-0.5"
+                        >
+                          Verify Credential &rarr;
+                        </a>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </SlideUp>
       </div>

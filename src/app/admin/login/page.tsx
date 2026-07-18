@@ -6,7 +6,17 @@ import { motion } from "framer-motion";
 import { Lock, Mail, AlertCircle, Loader2, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import Script from "next/script";
 import { adminLogin } from "../actions";
+
+declare global {
+  interface Window {
+    grecaptcha: any;
+  }
+}
+
+const RECAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || "";
+const isSandboxMode = !RECAPTCHA_SITE_KEY || RECAPTCHA_SITE_KEY.toLowerCase().includes("placeholder") || RECAPTCHA_SITE_KEY === "";
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -18,22 +28,61 @@ export default function AdminLoginPage() {
     setError("");
     setLoading(true);
 
-    const formData = new FormData(e.currentTarget);
-    try {
-      const res = await adminLogin(formData);
-      if (res.success) {
-        router.push("/admin");
-        router.refresh();
-      } else {
-        setError(res.error || "Authentication failed.");
+    const formElement = e.currentTarget;
+    const formData = new FormData(formElement);
+
+    if (isSandboxMode) {
+      try {
+        formData.append("recaptchaToken", "mock-token");
+        const res = await adminLogin(formData);
+        if (res.success) {
+          router.push("/admin");
+          router.refresh();
+        } else {
+          setError(res.error || "Authentication failed.");
+          setLoading(false);
+        }
+      } catch (err) {
+        console.error(err);
+        setError("An unexpected error occurred. Please try again.");
+        setLoading(false);
       }
+      return;
+    }
+
+    try {
+      if (typeof window === "undefined" || !window.grecaptcha) {
+        setError("reCAPTCHA script has not loaded. Please refresh the page and try again.");
+        setLoading(false);
+        return;
+      }
+
+      window.grecaptcha.ready(async () => {
+        try {
+          const token = await window.grecaptcha.execute(RECAPTCHA_SITE_KEY, { action: "login" });
+          formData.append("recaptchaToken", token);
+
+          const res = await adminLogin(formData);
+          if (res.success) {
+            router.push("/admin");
+            router.refresh();
+          } else {
+            setError(res.error || "Authentication failed.");
+            setLoading(false);
+          }
+        } catch (recaptchaErr) {
+          console.error("reCAPTCHA execution error:", recaptchaErr);
+          setError("Failed to verify human verification token. Please try again.");
+          setLoading(false);
+        }
+      });
     } catch (err) {
       console.error(err);
       setError("An unexpected error occurred. Please try again.");
-    } finally {
       setLoading(false);
     }
   };
+
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center px-4 relative">
@@ -55,6 +104,15 @@ export default function AdminLoginPage() {
           <p className="text-xs text-muted-foreground mt-1.5">
             Log in to manage your portfolio, messages, and posts.
           </p>
+          {isSandboxMode ? (
+            <div className="mt-3 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 font-mono text-[9px] font-medium uppercase tracking-wider mx-auto">
+              reCAPTCHA Sandbox Mode
+            </div>
+          ) : (
+            <div className="mt-3 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-mono text-[9px] font-medium uppercase tracking-wider mx-auto">
+              reCAPTCHA Secured
+            </div>
+          )}
         </div>
 
         {/* Form */}
@@ -126,6 +184,12 @@ export default function AdminLoginPage() {
           </Button>
         </form>
       </motion.div>
+      {!isSandboxMode && (
+        <Script
+          src={`https://www.google.com/recaptcha/api.js?render=${RECAPTCHA_SITE_KEY}`}
+          strategy="afterInteractive"
+        />
+      )}
     </div>
   );
 }
